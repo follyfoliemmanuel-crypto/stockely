@@ -1,0 +1,29 @@
+# dépendances
+node_modules/
+
+# build Next.js
+.next/
+out/
+build/
+dist/
+
+# environnement — ne jamais committer de secrets
+.env
+.env.local
+.env.*.local
+.env.production
+!.env.example
+
+# tests
+coverage/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# divers
+*.log
+.DS_Store
+Thumbs.db
+.vercel
+*.tsbuildinfo
