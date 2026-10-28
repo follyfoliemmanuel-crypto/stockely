@@ -277,7 +277,17 @@ export interface WarehouseOverview extends Warehouse {
   quantity: number;
 }
 
-export async function listWarehouseOverview(shopId: string): Promise<WarehouseOverview[]> {
+/**
+ * Vue agrégée des entrepôts réellement accessibles au membre.
+ * Un rôle restreint ne doit jamais voir les volumes des entrepôts auxquels
+ * il n'est pas rattaché, même en lecture.
+ */
+export async function listWarehouseOverview(
+  context: Pick<AuthContext, "shop" | "membership" | "role">,
+): Promise<WarehouseOverview[]> {
+  const accessible = await listAccessibleWarehouses(context);
+  if (accessible.length === 0) return [];
+
   const rows = await getDb()
     .select({
       warehouse: warehouses,
@@ -286,7 +296,16 @@ export async function listWarehouseOverview(shopId: string): Promise<WarehouseOv
     })
     .from(warehouses)
     .leftJoin(warehouseStock, eq(warehouseStock.warehouseId, warehouses.id))
-    .where(and(eq(warehouses.shopId, shopId), isNull(warehouses.archivedAt)))
+    .where(
+      and(
+        eq(warehouses.shopId, context.shop.id),
+        isNull(warehouses.archivedAt),
+        inArray(
+          warehouses.id,
+          accessible.map((warehouse) => warehouse.id),
+        ),
+      ),
+    )
     .groupBy(warehouses.id)
     .orderBy(desc(warehouses.isDefault), asc(warehouses.name));
 
@@ -561,9 +580,12 @@ export interface WarehouseMember {
 }
 
 export async function listWarehouseMembers(
-  shopId: string,
+  context: Pick<AuthContext, "shop" | "membership" | "role">,
   warehouseId: string,
 ): Promise<WarehouseMember[]> {
+  // Vérifie l'existence ET l'accès effectif avant d'exposer les membres.
+  await resolveWarehouse(context, warehouseId);
+
   const rows = await getDb()
     .select({
       membershipId: memberships.id,
@@ -582,7 +604,7 @@ export async function listWarehouseMembers(
         eq(warehouseAccess.warehouseId, warehouseId),
       ),
     )
-    .where(eq(memberships.shopId, shopId))
+    .where(eq(memberships.shopId, context.shop.id))
     .orderBy(asc(users.name));
 
   return rows.map((row) => ({

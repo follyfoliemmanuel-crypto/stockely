@@ -150,6 +150,30 @@ export async function resetPassword(
   const passwordHash = await hashPassword(newPassword);
 
   await db.transaction(async (tx) => {
+    // Consommation atomique : seule la requête qui passe `used_at` de NULL à
+    // une date obtient la ligne. Deux réinitialisations concurrentes avec le
+    // même jeton ne peuvent donc pas réussir toutes les deux.
+    const claimed = await tx
+      .update(passwordResetTokens)
+      .set({ usedAt: now })
+      .where(
+        and(
+          eq(passwordResetTokens.tokenHash, tokenHash),
+          isNull(passwordResetTokens.usedAt),
+          gte(passwordResetTokens.expiresAt, now),
+        ),
+      )
+      .returning({ userId: passwordResetTokens.userId });
+
+    if (!claimed[0] || claimed[0].userId !== row.user.id) {
+      throw new ApiError(
+        400,
+        "invalid_reset_token",
+        "Ce lien est invalide ou a expiré. Demandez un nouveau lien.",
+      );
+    }
+
+    // Les autres jetons encore actifs du compte sont invalidés par sécurité.
     await tx
       .update(passwordResetTokens)
       .set({ usedAt: now })

@@ -8,6 +8,7 @@ import {
   authIdentities,
   memberships,
   saleCounters,
+  sessions,
   shopSettings,
   shops,
   users,
@@ -100,26 +101,42 @@ export async function loginWithGoogle(
     const existing = byEmail[0];
 
     if (existing) {
-      // L'e-mail Google est vérifié : la liaison est sûre.
-      await db
-        .insert(authIdentities)
-        .values({
-          userId: existing.id,
-          provider: "google",
-          providerAccountId: profile.sub,
-        })
-        .onConflictDoNothing();
+      // L'e-mail Google est vérifié : la liaison est sûre. L'identité et la
+      // reprise du compte sont écrites dans la même transaction pour qu'un
+      // échec ne laisse jamais une identité liée sans révocation du mot de
+      // passe existant.
+      const now = new Date();
+      let linkedUser = existing;
+      await db.transaction(async (tx) => {
+        await tx
+          .insert(authIdentities)
+          .values({
+            userId: existing.id,
+            provider: "google",
+            providerAccountId: profile.sub,
+          })
+          .onConflictDoNothing();
 
-      if (!existing.emailVerifiedAt) {
-        const [updated] = await db
-          .update(users)
-          .set({ emailVerifiedAt: new Date(), updatedAt: new Date() })
-          .where(eq(users.id, existing.id))
-          .returning();
-        user = updated ?? existing;
-      } else {
-        user = existing;
-      }
+        if (!existing.emailVerifiedAt) {
+          // Compte créé par mot de passe mais jamais vérifié : un tiers a pu
+          // enregistrer l'adresse avant son propriétaire. Google prouve ici
+          // la propriété de l'e-mail, donc on reprend le compte : le mot de
+          // passe inconnu est supprimé et toutes les sessions existantes sont
+          // révoquées, ce qui neutralise une pré-création malveillante.
+          const [updated] = await tx
+            .update(users)
+            .set({ emailVerifiedAt: now, passwordHash: null, updatedAt: now })
+            .where(eq(users.id, existing.id))
+            .returning();
+          linkedUser = updated ?? existing;
+
+          await tx
+            .update(sessions)
+            .set({ revokedAt: now })
+            .where(and(eq(sessions.userId, existing.id), isNull(sessions.revokedAt)));
+        }
+      });
+      user = linkedUser;
 
       await writeAudit(db, {
         shopId: null,

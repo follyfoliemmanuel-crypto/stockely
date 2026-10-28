@@ -15,7 +15,7 @@ export const metadata = { title: "Entrepôts" };
 export default async function WarehousesPage() {
   const context = await requirePage("warehouses.read");
   const [warehouses, activeWarehouse] = await Promise.all([
-    listWarehouseOverview(context.shop.id),
+    listWarehouseOverview(context),
     resolveRequestWarehouse(context),
   ]);
   const canWrite = context.permissions.has("warehouses.write");

@@ -5,6 +5,8 @@ import {
   desc,
   eq,
   ilike,
+  inArray,
+  isNull,
   or,
   sql,
 } from "drizzle-orm";
@@ -28,7 +30,10 @@ import type {
   ProductCreateInput,
   ProductUpdateInput,
 } from "@/server/validation/catalog";
-import { resolveWarehouse } from "@/server/services/warehouses";
+import {
+  listAccessibleWarehouses,
+  resolveWarehouse,
+} from "@/server/services/warehouses";
 
 export interface ProductListFilters {
   q?: string;
@@ -462,9 +467,21 @@ export async function getProduct(shopId: string, productId: string) {
   return rows[0] ?? null;
 }
 
-export async function getProductDetail(shopId: string, productId: string) {
-  const row = await getProduct(shopId, productId);
+export async function getProductDetail(
+  context: Pick<AuthContext, "shop" | "membership" | "role">,
+  productId: string,
+) {
+  const row = await getProduct(context.shop.id, productId);
   if (!row) return null;
+
+  // Ne jamais exposer les mouvements ni les quantités des entrepôts
+  // auxquels le membre n'a pas accès. Les mouvements historiques sans
+  // entrepôt (antérieurs au multi-entrepôts) restent consultables.
+  const accessible = await listAccessibleWarehouses(context);
+  const allowedWarehouseIds = accessible.map((warehouse) => warehouse.id);
+  if (allowedWarehouseIds.length === 0) {
+    return { ...row, movements: [], stockByWarehouse: [] };
+  }
 
   const movements = await getDb()
     .select({
@@ -482,8 +499,12 @@ export async function getProductDetail(shopId: string, productId: string) {
     .leftJoin(users, eq(users.id, stockMovements.userId))
     .where(
       and(
-        eq(stockMovements.shopId, shopId),
+        eq(stockMovements.shopId, context.shop.id),
         eq(stockMovements.productId, productId),
+        or(
+          isNull(stockMovements.warehouseId),
+          inArray(stockMovements.warehouseId, allowedWarehouseIds),
+        ),
       ),
     )
     .orderBy(desc(stockMovements.createdAt))
@@ -501,9 +522,10 @@ export async function getProductDetail(shopId: string, productId: string) {
     .innerJoin(warehouses, eq(warehouses.id, warehouseStock.warehouseId))
     .where(
       and(
-        eq(warehouseStock.shopId, shopId),
+        eq(warehouseStock.shopId, context.shop.id),
         eq(warehouseStock.productId, productId),
         eq(warehouses.isActive, true),
+        inArray(warehouseStock.warehouseId, allowedWarehouseIds),
       ),
     )
     .orderBy(desc(warehouses.isDefault), asc(warehouses.name));

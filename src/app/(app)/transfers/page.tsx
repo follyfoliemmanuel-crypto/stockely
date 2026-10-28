@@ -30,7 +30,7 @@ export default async function TransfersPage({
   const warehouseId = firstParam(params.warehouseId) ?? "";
   const page = pageParam(params.page);
 
-  const result = await listTransfers(context.shop.id, {
+  const result = await listTransfers(context, {
     q: q || undefined,
     status,
     warehouseId: warehouseId || undefined,

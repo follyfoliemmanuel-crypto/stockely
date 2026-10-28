@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import { writeAudit } from "@/server/audit";
 import type { AuthContext } from "@/server/auth/context";
@@ -29,6 +29,7 @@ import {
   applyWarehouseDelta,
   ensureWarehouseStockRow,
   getWarehouse,
+  listAccessibleWarehouses,
   resolveWarehouse,
 } from "@/server/services/warehouses";
 
@@ -68,14 +69,27 @@ export interface TransferListItem {
 }
 
 export async function listTransfers(
-  shopId: string,
+  context: Pick<AuthContext, "shop" | "membership" | "role">,
   filters: TransferListFilters = {},
 ) {
   const db = getDb();
   const page = Math.min(10_000, Math.max(1, filters.page ?? 1));
   const pageSize = Math.min(100, Math.max(1, filters.pageSize ?? PAGE_SIZE));
 
-  const conditions = [eq(warehouseTransfers.shopId, shopId)];
+  // Un transfert n'est visible que s'il touche un entrepôt accessible.
+  const accessible = await listAccessibleWarehouses(context);
+  const allowedWarehouseIds = accessible.map((warehouse) => warehouse.id);
+  const conditions = [
+    eq(warehouseTransfers.shopId, context.shop.id),
+    or(
+      allowedWarehouseIds.length > 0
+        ? inArray(warehouseTransfers.fromWarehouseId, allowedWarehouseIds)
+        : sql`false`,
+      allowedWarehouseIds.length > 0
+        ? inArray(warehouseTransfers.toWarehouseId, allowedWarehouseIds)
+        : sql`false`,
+    ),
+  ];
 
   if (filters.status) {
     conditions.push(eq(warehouseTransfers.status, filters.status));
@@ -177,12 +191,15 @@ export type TransferDetail = Omit<
 };
 
 export async function getTransfer(
-  shopId: string,
+  context: Pick<AuthContext, "shop" | "membership" | "role">,
   transferId: string,
 ): Promise<TransferDetail | null> {
   if (!isUuid(transferId)) return null;
 
   const db = getDb();
+  const accessible = await listAccessibleWarehouses(context);
+  const allowedWarehouseIds = accessible.map((warehouse) => warehouse.id);
+  if (allowedWarehouseIds.length === 0) return null;
 
   const [transferRows, items] = await Promise.all([
     db
@@ -213,7 +230,11 @@ export async function getTransfer(
       .where(
         and(
           eq(warehouseTransfers.id, transferId),
-          eq(warehouseTransfers.shopId, shopId),
+          eq(warehouseTransfers.shopId, context.shop.id),
+          or(
+            inArray(warehouseTransfers.fromWarehouseId, allowedWarehouseIds),
+            inArray(warehouseTransfers.toWarehouseId, allowedWarehouseIds),
+          ),
         ),
       )
       .limit(1),
@@ -470,7 +491,7 @@ export async function shipTransfer(
   const db = getDb();
   const shopId = context.shop.id;
 
-  const transfer = await getTransfer(shopId, transferId);
+  const transfer = await getTransfer(context, transferId);
   if (!transfer) {
     throw new ApiError(404, "transfer_not_found", "Transfert introuvable.");
   }
@@ -527,7 +548,7 @@ export async function receiveTransfer(
   const db = getDb();
   const shopId = context.shop.id;
 
-  const transfer = await getTransfer(shopId, transferId);
+  const transfer = await getTransfer(context, transferId);
   if (!transfer) {
     throw new ApiError(404, "transfer_not_found", "Transfert introuvable.");
   }
@@ -688,7 +709,7 @@ export async function cancelTransfer(
   const db = getDb();
   const shopId = context.shop.id;
 
-  const transfer = await getTransfer(shopId, transferId);
+  const transfer = await getTransfer(context, transferId);
   if (!transfer) {
     throw new ApiError(404, "transfer_not_found", "Transfert introuvable.");
   }

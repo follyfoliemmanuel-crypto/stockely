@@ -13,7 +13,10 @@ export default defineConfig({
     exclude: ["tests/e2e/**", "node_modules/**"],
     setupFiles: ["tests/setup-env.ts"],
     fileParallelism: false,
-    testTimeout: 30_000,
-    hookTimeout: 30_000,
+    // Les tests d'intégration écrivent sur une base distante : le temps
+    // d'aller-retour dépasse parfois 30 s. Le test de cycle complet des
+    // transferts porte en plus son propre délai de 120 s.
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
   },
 });

@@ -35,7 +35,26 @@ const envSchema = z.object({
   /* Envoi d'e-mails — facultatif tant que non configuré. */
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
-}).readonly();
+})
+  .superRefine((value, ctx) => {
+    // En production, l'application doit être servie en HTTPS : sans cela les
+    // cookies `Secure` ne seraient pas envoyés et HSTS n'aurait aucun effet.
+    // Les adresses de boucle locale restent tolérées pour les essais locaux.
+    const isLocal =
+      /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(value.APP_URL);
+    if (
+      value.NODE_ENV === "production" &&
+      !value.APP_URL.startsWith("https://") &&
+      !isLocal
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["APP_URL"],
+        message: "APP_URL doit utiliser HTTPS en production.",
+      });
+    }
+  })
+  .readonly();
 
 export type Env = z.infer<typeof envSchema>;
 

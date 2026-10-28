@@ -48,5 +48,10 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.4"
+    }
   }
 }

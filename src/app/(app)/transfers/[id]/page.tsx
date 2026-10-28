@@ -24,7 +24,7 @@ export default async function TransferDetailPage({ params }: PageProps) {
   const context = await requirePage("transfers.read");
   const { id } = await params;
 
-  const transfer = await getTransfer(context.shop.id, id);
+  const transfer = await getTransfer(context, id);
   if (!transfer) notFound();
 
   const canShip = context.permissions.has("transfers.ship");

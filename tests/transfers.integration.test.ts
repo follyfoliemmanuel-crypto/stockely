@@ -184,7 +184,7 @@ describe.skipIf(!hasTestDatabase)("transferts inter-entrepôts (intégration)", 
 
     // 2. Expédition
     await shipTransfer(fix.context, transferId, { note: "Camion parti à 14h" });
-    const transferShipped = await getTransfer(fix.shopId, transferId);
+    const transferShipped = await getTransfer(fix.context, transferId);
     expect(transferShipped?.status).toBe("shipped");
     expect(transferShipped?.shippedAt).not.toBeNull();
 
@@ -194,7 +194,7 @@ describe.skipIf(!hasTestDatabase)("transferts inter-entrepôts (intégration)", 
       note: "Réceptionné sans incident",
     });
 
-    const transferReceived = await getTransfer(fix.shopId, transferId);
+    const transferReceived = await getTransfer(fix.context, transferId);
     expect(transferReceived?.status).toBe("received");
     expect(transferReceived?.receivedAt).not.toBeNull();
 
@@ -213,7 +213,7 @@ describe.skipIf(!hasTestDatabase)("transferts inter-entrepôts (intégration)", 
       .from(products)
       .where(eq(products.id, prod.id));
     expect(totalProdRec[0]?.quantity).toBe(100);
-  });
+  }, 120_000);
 
   it("gère les écarts et pertes à la réception en ajustant le total de l'entreprise", async () => {
     const fix = await createTransferFixture("discrepancy");
@@ -291,7 +291,7 @@ describe.skipIf(!hasTestDatabase)("transferts inter-entrepôts (intégration)", 
       reason: "Commande annulée par le responsable de boutique",
     });
 
-    const transfer = await getTransfer(fix.shopId, transferId);
+    const transfer = await getTransfer(fix.context, transferId);
     expect(transfer?.status).toBe("cancelled");
     expect(transfer?.cancelReason).toContain("Commande annulée");
 

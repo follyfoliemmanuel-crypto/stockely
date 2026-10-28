@@ -4,7 +4,13 @@ import { assertCsrf, requireAuth } from "@/server/auth/context";
 import { clearRequestWarehouseCookie } from "@/server/auth/warehouse";
 import { getDb } from "@/server/db";
 import { memberships, sessions, shops } from "@/server/db/schema";
-import { ApiError, jsonOk, readJson, route } from "@/server/http";
+import {
+  ApiError,
+  assertSameOrigin,
+  jsonOk,
+  readJson,
+  route,
+} from "@/server/http";
 import { effectivePermissions } from "@/server/permissions";
 import { switchShopSchema } from "@/server/validation/auth";
 
@@ -12,6 +18,7 @@ export const dynamic = "force-dynamic";
 
 export const POST = route(async (request: Request) => {
   const context = await requireAuth();
+  assertSameOrigin(request);
   assertCsrf(request, context);
 
   const { shopId } = await readJson(request, switchShopSchema);

@@ -1,4 +1,16 @@
-import { and, asc, count, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  or,
+  sql,
+} from "drizzle-orm";
 
 import { writeAudit } from "@/server/audit";
 import type { AuthContext } from "@/server/auth/context";
@@ -19,6 +31,7 @@ import {
   applyWarehouseDelta,
   ensureWarehouseStockRow,
   getWarehouseQuantity,
+  listAccessibleWarehouses,
   resolveWarehouse,
 } from "@/server/services/warehouses";
 
@@ -55,13 +68,24 @@ export interface StockListFilters {
 }
 
 export async function listStockMovements(
-  shopId: string,
+  context: Pick<AuthContext, "shop" | "membership" | "role">,
   filters: StockListFilters = {},
 ) {
   const db = getDb();
   const page = Math.min(10_000, Math.max(1, filters.page ?? 1));
   const pageSize = Math.min(100, Math.max(1, filters.pageSize ?? PAGE_SIZE));
-  const conditions = [eq(stockMovements.shopId, shopId)];
+
+  const accessible = await listAccessibleWarehouses(context);
+  const allowedWarehouseIds = accessible.map((warehouse) => warehouse.id);
+  const conditions = [
+    eq(stockMovements.shopId, context.shop.id),
+    or(
+      isNull(stockMovements.warehouseId),
+      allowedWarehouseIds.length > 0
+        ? inArray(stockMovements.warehouseId, allowedWarehouseIds)
+        : sql`false`,
+    ),
+  ];
 
   if (filters.productId && isUuid(filters.productId)) {
     conditions.push(eq(stockMovements.productId, filters.productId));

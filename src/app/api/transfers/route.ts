@@ -35,7 +35,7 @@ export const GET = route(async (request: Request) => {
   const warehouseId = url.searchParams.get("warehouseId") ?? undefined;
   const q = url.searchParams.get("q") ?? undefined;
 
-  const result = await listTransfers(context.shop.id, {
+  const result = await listTransfers(context, {
     status,
     fromWarehouseId,
     toWarehouseId,

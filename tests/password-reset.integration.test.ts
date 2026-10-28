@@ -3,6 +3,10 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { hashPassword, verifyPassword } from "@/server/auth/password";
+import {
+  assertRegistrationAllowed,
+  recordRegistrationAttempt,
+} from "@/server/auth/rate-limit";
 import { generateToken, hashToken } from "@/server/auth/session";
 import { getDb, getPool } from "@/server/db";
 import {
@@ -135,6 +139,39 @@ describe.skipIf(!hasTestDatabase)("réinitialisation du mot de passe (intégrati
     ).rejects.toMatchObject({ status: 400, code: "invalid_reset_token" });
   });
 
+  it("refuse deux réinitialisations concurrentes avec le même jeton", async () => {
+    const user = await createUser("concurrent");
+    const ipHash = `test-ip-${randomUUID()}`;
+
+    await requestPasswordReset(user.email, ipHash);
+    expect(mail.sent).toHaveLength(1);
+    const rawToken = new URL(mail.sent[0]!.resetUrl).searchParams.get("token");
+    expect(rawToken).toBeTruthy();
+
+    const results = await Promise.allSettled([
+      resetPassword(rawToken!, "premier-secret-2026", ipHash),
+      resetPassword(rawToken!, "second-secret-2026", ipHash),
+    ]);
+
+    const fulfilled = results.filter((result) => result.status === "fulfilled");
+    const rejected = results.filter((result) => result.status === "rejected");
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]).toMatchObject({
+      reason: { status: 400, code: "invalid_reset_token" },
+    });
+
+    const [updatedUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, user.id));
+    const acceptedPassword = await Promise.all([
+      verifyPassword(updatedUser!.passwordHash!, "premier-secret-2026"),
+      verifyPassword(updatedUser!.passwordHash!, "second-secret-2026"),
+    ]);
+    expect(acceptedPassword.filter(Boolean)).toHaveLength(1);
+  });
+
   it("ne révèle rien et n'envoie rien pour un compte inconnu", async () => {
     const ipHash = `test-ip-${randomUUID()}`;
     await expect(
@@ -169,5 +206,19 @@ describe.skipIf(!hasTestDatabase)("réinitialisation du mot de passe (intégrati
     await requestPasswordReset(user.email, ipHash);
 
     expect(mail.sent).toHaveLength(3);
+  });
+
+  it("limite les créations de compte par adresse IP", async () => {
+    const ipHash = `test-register-ip-${randomUUID()}`;
+
+    for (let index = 0; index < 5; index += 1) {
+      await expect(assertRegistrationAllowed(ipHash)).resolves.toBeUndefined();
+      await recordRegistrationAttempt(ipHash);
+    }
+
+    await expect(assertRegistrationAllowed(ipHash)).rejects.toMatchObject({
+      status: 429,
+      code: "too_many_registrations",
+    });
   });
 });

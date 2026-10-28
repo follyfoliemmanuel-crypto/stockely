@@ -44,7 +44,7 @@ export default async function StockPage({
   const warehouse = await resolveRequestWarehouse(context);
 
   const [result, stats, productStats, products] = await Promise.all([
-    listStockMovements(context.shop.id, {
+    listStockMovements(context, {
       q: q || undefined,
       productId: productId || undefined,
       warehouseId: warehouse.id,

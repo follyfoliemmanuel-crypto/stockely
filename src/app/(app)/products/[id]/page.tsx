@@ -28,7 +28,7 @@ export default async function ProductDetailPage({
 }) {
   const context = await requirePage("products.read");
   const { id } = await params;
-  const detail = await getProductDetail(context.shop.id, id);
+  const detail = await getProductDetail(context, id);
   if (!detail) notFound();
 
   const product = detail.product;

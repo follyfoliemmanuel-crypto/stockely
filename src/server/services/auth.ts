@@ -18,7 +18,12 @@ import {
 import { ApiError } from "@/server/http";
 import type { LoginInput, RegisterInput } from "@/server/validation/auth";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
-import { assertLoginAllowed, recordLoginAttempt } from "@/server/auth/rate-limit";
+import {
+  assertLoginAllowed,
+  assertRegistrationAllowed,
+  recordLoginAttempt,
+  recordRegistrationAttempt,
+} from "@/server/auth/rate-limit";
 import { createSession, type CreatedSession } from "@/server/auth/session";
 
 export interface Authenticated {
@@ -71,6 +76,12 @@ export async function registerUser(
 ): Promise<Authenticated> {
   const db = getDb();
   const env = getEnv();
+
+  await assertRegistrationAllowed(meta.ipHash);
+  // Comptabilise la tentative avant le travail coûteux (Argon2id), y compris
+  // lorsqu'elle échouera, afin de limiter les inscriptions automatisées.
+  await recordRegistrationAttempt(meta.ipHash);
+
   const passwordHash = await hashPassword(input.password);
   const slug = await uniqueSlug(input.shopName);
 

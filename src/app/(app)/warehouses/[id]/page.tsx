@@ -8,8 +8,8 @@ import { WarehouseEditForm } from "@/components/warehouses/warehouse-edit-form";
 import { requirePage } from "@/server/auth/page";
 import { formatDate, formatInteger } from "@/lib/money";
 import {
-  getWarehouse,
   hasAllWarehouseAccess,
+  listAccessibleWarehouses,
   listWarehouseMembers,
   listWarehouseOverview,
 } from "@/server/services/warehouses";
@@ -32,12 +32,13 @@ export default async function WarehouseDetailPage({
 }) {
   const context = await requirePage("warehouses.read");
   const { id } = await params;
-  const warehouse = await getWarehouse(context.shop.id, id);
+  const accessible = await listAccessibleWarehouses(context);
+  const warehouse = accessible.find((row) => row.id === id);
   if (!warehouse) notFound();
 
   const [overview, members] = await Promise.all([
-    listWarehouseOverview(context.shop.id),
-    listWarehouseMembers(context.shop.id, warehouse.id),
+    listWarehouseOverview(context),
+    listWarehouseMembers(context, warehouse.id),
   ]);
   const stats = overview.find((row) => row.id === warehouse.id);
   const canWrite = context.permissions.has("warehouses.write");

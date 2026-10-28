@@ -34,7 +34,7 @@ export const POST = route(async (request: Request) => {
 
   const input = await readJson(request, warehouseCreateSchema);
   const warehouse = await createWarehouse(context, input);
-  const overview = await listWarehouseOverview(context.shop.id);
+  const overview = await listWarehouseOverview(context);
   const created = overview.find((row) => row.id === warehouse.id) ?? null;
 
   return jsonOk({ warehouse: created }, 201);
