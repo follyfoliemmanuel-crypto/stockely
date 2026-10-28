@@ -19,7 +19,7 @@ journal d'audit. Architecture multi-boutiques avec isolation stricte des donnée
 | 5 | Permissions avancées, audit, notifications | ✅ terminée |
 | 6 | Rapports PDF / CSV | ✅ terminée |
 | 7 | Tests complets, build, déploiement | ✅ prêt à déployer |
-| 8 | Fondations multi-entrepôts (P1) | ✅ implémentée, migration appliquée à la base de test |
+| 8 | Multi-entrepôts, transferts, accès par entrepôt | ✅ implémentée, migrations appliquées en production |
 
 > La connexion Google et l'envoi d'e-mails de réinitialisation sont **implémentés
 > mais inactifs tant que leurs variables d'environnement ne sont pas renseignées**.
@@ -231,11 +231,28 @@ La migration `0003_multi_warehouse` est **additive** : elle crée `warehouses`,
 > `warehouse_stock` devient la source de vérité. `products.quantity` reste un
 > cache du total, maintenu atomiquement par les services.
 
-**Avant d'appliquer cette migration à la base principale** : créer une branche
+**Avant d'appliquer une migration à la base principale** : créer une branche
 Neon ou une sauvegarde vérifiée, appliquer la migration sur une branche de test,
 puis seulement ensuite sur la production. Ne jamais lancer `db:migrate` contre une
-base inconnue sans sauvegarde préalable. La base principale de ce dépôt n'a pas
-encore été migrée : seule `stockely_test` l'a été.
+base inconnue sans sauvegarde préalable.
+
+La base de production `stockely` est à jour (5/5 migrations appliquées le
+2026-10-27). Pour toute nouvelle migration, suivre le runbook
+**[docs/PRODUCTION_MIGRATION.md](docs/PRODUCTION_MIGRATION.md)** : il détaille la
+sauvegarde, les garde-fous, la restauration et le journal de migration.
+
+```bash
+# 1. État en lecture seule (aucune écriture)
+npm run db:status
+
+# 2. Migration guardée : confirmation + référence de sauvegarde obligatoires
+BACKUP_REFERENCE="neon:br-xxxx (2026-10-28)" npm run db:migrate:prod -- --confirm=APPLY
+```
+
+`db:migrate:prod` refuse une base dont le nom ressemble à une base de test, un
+schéma partiellement appliqué et une exécution concurrente. Il revérifie les
+invariants après migration. Si aucune migration n'est en attente, il ne fait
+qu'un contrôle et sort avec le code `0`.
 
 Après la migration, vérifier l'invariant en lecture seule :
 
@@ -369,8 +386,10 @@ EMAIL_FROM="Stockely <no-reply@votre-domaine.com>"
 | `npm run lint` | Oxlint |
 | `npm test` | Tests Vitest |
 | `npm run db:generate` | Génère une migration depuis le schéma |
-| `npm run db:migrate` | Applique les migrations |
+| `npm run db:migrate` | Applique les migrations (développement) |
 | `npm run db:migrate:test` | Applique les migrations à la base de test |
+| `npm run db:status` | État en lecture seule d'une base (migrations, volumes, invariants) |
+| `npm run db:migrate:prod` | Migration de production guardée (`--confirm=APPLY` + `BACKUP_REFERENCE`) |
 | `npm run db:check:warehouses` | Vérifie en lecture seule l'invariant multi-entrepôts |
 | `npm run db:create-owner` | Crée ou promeut un propriétaire |
 | `npm run db:seed` | Données de démonstration (hors production) |
@@ -469,6 +488,9 @@ et calculées côté serveur.
 
 ## Sauvegarde et restauration
 
+> Procédure complète, avec garde-fous et restauration Neon :
+> **[docs/PRODUCTION_MIGRATION.md](docs/PRODUCTION_MIGRATION.md)**.
+
 ### Sauvegarde locale
 
 ```bash
@@ -512,8 +534,18 @@ sauvegarde et sur une base identifiée.
    Ajouter si utilisés : `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
    `GOOGLE_REDIRECT_URI`, `RESEND_API_KEY`, `EMAIL_FROM`.
 3. **Créer une branche Neon de sauvegarde**, puis appliquer les migrations
-   **depuis votre machine** : `npm run db:migrate`. Vérifier ensuite que la
-   migration `0003_multi_warehouse` a réussi (un échec annule la transaction).
+   **depuis votre machine** avec le runbook
+   [`docs/PRODUCTION_MIGRATION.md`](docs/PRODUCTION_MIGRATION.md) :
+
+   ```bash
+   npm run db:status
+   BACKUP_REFERENCE="neon:br-xxxx (date)" npm run db:migrate:prod -- --confirm=APPLY
+   npm run db:status
+   npm run db:check:warehouses
+   ```
+
+   Un échec annule la transaction ; si les invariants restent en échec après
+   migration, restaurer la branche de sauvegarde (voir le runbook).
 4. Déployer.
 5. Vérifier `https://<domaine>/api/health`.
 6. Créer le propriétaire via `db:create-owner` ou l'inscription.
