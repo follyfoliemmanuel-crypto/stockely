@@ -95,7 +95,7 @@ export default async function ReportsPage({
         }
       />
 
-      <section className="print:hidden rounded-lg border border-line bg-white">
+      <section className="print:hidden overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card">
         <form
           method="get"
           className="grid gap-2 px-4 py-3 sm:grid-cols-[9rem_9rem_auto_1fr] sm:items-end"
@@ -156,7 +156,7 @@ export default async function ReportsPage({
         </p>
       </section>
 
-      <div className="grid grid-cols-2 divide-x divide-y divide-line overflow-hidden rounded-lg border border-line bg-white sm:grid-cols-4 sm:divide-y-0">
+      <div className="grid grid-cols-2 divide-x divide-y divide-line overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card sm:grid-cols-4 sm:divide-y-0">
         {[
           {
             label: "Chiffre d'affaires",
@@ -283,19 +283,23 @@ export default async function ReportsPage({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[34rem] text-left text-[0.8125rem]">
+              <table className="w-full sm:min-w-[34rem] text-left text-[0.8125rem]">
                 <thead>
                   <tr className="border-b border-line text-[0.625rem] uppercase tracking-[0.12em] text-muted">
-                    <th className="px-5 py-2.5 font-semibold">Produit</th>
-                    <th className="px-4 py-2.5 text-right font-semibold">Qté</th>
+                    <th className="px-4 py-2.5 font-semibold sm:px-5">Produit</th>
+                    <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">
+                      Qté
+                    </th>
                     <th className="px-4 py-2.5 text-right font-semibold">CA</th>
-                    <th className="px-5 py-2.5 text-right font-semibold">Marge</th>
+                    <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell sm:px-5">
+                      Marge
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
                   {report.topProducts.map((product) => (
                     <tr key={`${product.sku}-${product.productName}`}>
-                      <td className="px-5 py-3">
+                      <td className="px-4 py-3 sm:px-5">
                         {product.productId ? (
                           <Link
                             href={`/products/${product.productId}`}
@@ -310,13 +314,13 @@ export default async function ReportsPage({
                           {product.sku}
                         </span>
                       </td>
-                      <td className="tabular px-4 py-3 text-right font-mono">
+                      <td className="tabular hidden px-4 py-3 text-right font-mono sm:table-cell">
                         {formatInteger(product.quantity)}
                       </td>
                       <td className="tabular px-4 py-3 text-right font-mono">
                         {formatMoney(product.revenue, currency)}
                       </td>
-                      <td className="tabular px-5 py-3 text-right font-mono">
+                      <td className="tabular hidden px-4 py-3 text-right font-mono sm:table-cell sm:px-5">
                         {product.complete ? (
                           formatMoney(product.margin, currency)
                         ) : (

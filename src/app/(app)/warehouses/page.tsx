@@ -33,7 +33,7 @@ export default async function WarehousesPage() {
           <Link
             key={warehouse.id}
             href={`/warehouses/${warehouse.id}`}
-            className="group rounded-lg border border-line bg-white p-4 transition-colors hover:border-primary/40"
+            className="group rounded-2xl border border-line/90 bg-white p-4 shadow-card transition-colors hover:border-primary/40"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -87,7 +87,7 @@ export default async function WarehousesPage() {
         </SectionCard>
       )}
 
-      <div className="flex items-center justify-between rounded-lg border border-line bg-white px-4 py-3 text-[0.8125rem]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line/90 bg-white px-4 py-3 text-[0.8125rem] shadow-card">
         <p className="text-muted">
           Le stock total affiché dans le catalogue reste la somme de tous les
           entrepôts.

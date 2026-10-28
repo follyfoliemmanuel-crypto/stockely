@@ -63,7 +63,7 @@ export default async function TransfersPage({
       </div>
 
       {/* Filtres */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface p-3">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3">
         <Link
           href={`/transfers${buildQuery(current, { status: undefined, page: undefined })}`}
           className={buttonClasses({
@@ -122,54 +122,80 @@ export default async function TransfersPage({
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-xs">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-surface-subtle text-xs font-semibold uppercase text-muted">
+        <div className="overflow-x-auto rounded-2xl border border-line bg-surface shadow-xs">
+          <table className="data-table md:min-w-[48rem]">
+            <thead>
               <tr>
-                <th className="px-4 py-3">Numéro</th>
-                <th className="px-4 py-3">Statut</th>
-                <th className="px-4 py-3">Itinéraire</th>
-                <th className="px-4 py-3 text-right">Articles</th>
-                <th className="px-4 py-3 text-right">Quantité</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3 text-right">Détails</th>
+                <th scope="col" className="px-4 py-3 sm:px-5">
+                  Numéro
+                </th>
+                <th scope="col" className="hidden px-4 py-3 sm:table-cell">
+                  Statut
+                </th>
+                <th scope="col" className="px-4 py-3">
+                  Itinéraire
+                </th>
+                <th scope="col" className="hidden px-4 py-3 text-right lg:table-cell">
+                  Articles
+                </th>
+                <th scope="col" className="px-4 py-3 text-right">
+                  Quantité
+                </th>
+                <th scope="col" className="hidden px-4 py-3 lg:table-cell">
+                  Date
+                </th>
+                <th scope="col" className="hidden px-4 py-3 text-right sm:table-cell">
+                  Détails
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-line">
               {result.items.map((trf) => (
-                <tr key={trf.id} className="hover:bg-surface-subtle/50 transition-colors">
-                  <td className="px-4 py-3 font-mono font-medium text-foreground">
+                <tr key={trf.id}>
+                  <td className="px-4 py-3 font-mono font-medium text-ink sm:px-5">
                     <Link
                       href={`/transfers/${trf.id}`}
-                      className="text-primary hover:underline"
+                      className="tabular text-[0.75rem] text-primary-dark underline-offset-4 hover:underline"
                     >
                       {trf.number}
                     </Link>
+                    <span className="mt-1 block sm:hidden">
+                      <TransferStatusBadge status={trf.status} />
+                    </span>
+                    <span className="mt-1 block whitespace-nowrap text-[0.625rem] text-muted sm:hidden">
+                      {formatDate(trf.createdAt, context.shop.timezone)}
+                    </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="hidden px-4 py-3 sm:table-cell">
                     <TransferStatusBadge status={trf.status} />
                   </td>
-                  <td className="px-4 py-3 text-foreground">
-                    <span className="font-medium">{trf.fromWarehouseName}</span>
-                    <span className="text-muted mx-1.5">➔</span>
-                    <span className="font-medium">{trf.toWarehouseName}</span>
+                  <td className="px-4 py-3 text-ink">
+                    <span className="block max-w-[11rem] truncate text-[0.8125rem] font-medium sm:max-w-none">
+                      {trf.fromWarehouseName}
+                    </span>
+                    <span className="mt-0.5 flex items-baseline gap-1 text-[0.75rem] text-muted">
+                      <span aria-hidden="true">→</span>
+                      <span className="truncate">{trf.toWarehouseName}</span>
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-right text-muted">
-                    {trf.itemCount} réf.
+                  <td className="hidden px-4 py-3 text-right font-mono text-muted lg:table-cell">
+                    {formatInteger(trf.itemCount)} réf.
                   </td>
-                  <td className="px-4 py-3 text-right font-medium text-foreground">
-                    {formatInteger(trf.totalQuantitySent)} unités
+                  <td className="tabular px-4 py-3 text-right font-mono font-medium text-ink">
+                    {formatInteger(trf.totalQuantitySent)}{" "}
+                    unité{trf.totalQuantitySent > 1 ? "s" : ""}
                     {trf.totalQuantityReceived !== null &&
                       trf.totalQuantityReceived < trf.totalQuantitySent && (
-                        <span className="block text-xs text-danger">
-                          ({formatInteger(trf.totalQuantityReceived)} reçues)
+                        <span className="block text-[0.6875rem] text-danger">
+                          ({formatInteger(trf.totalQuantityReceived)} reçue
+                          {trf.totalQuantityReceived > 1 ? "s" : ""})
                         </span>
                       )}
                   </td>
-                  <td className="px-4 py-3 text-muted text-xs">
+                  <td className="hidden whitespace-nowrap px-4 py-3 text-[0.75rem] text-muted lg:table-cell">
                     {formatDate(trf.createdAt, context.shop.timezone)}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="hidden px-4 py-3 text-right sm:table-cell">
                     <Link
                       href={`/transfers/${trf.id}`}
                       className={buttonClasses({ variant: "secondary", size: "sm" })}

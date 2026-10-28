@@ -75,7 +75,7 @@ export default async function SalesPage({
         }
       />
 
-      <div className="grid grid-cols-2 divide-x divide-y divide-line overflow-hidden rounded-lg border border-line bg-white sm:grid-cols-4 sm:divide-y-0">
+      <div className="grid grid-cols-2 divide-x divide-y divide-line overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card sm:grid-cols-4 sm:divide-y-0">
         {[
           { label: "Ventes aujourd'hui", value: formatInteger(stats.todayCount) },
           {
@@ -97,7 +97,7 @@ export default async function SalesPage({
         ))}
       </div>
 
-      <section className="overflow-hidden rounded-lg border border-line bg-white">
+      <section className="overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card">
         <form
           method="get"
           className="grid gap-2 border-b border-line bg-surface/60 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_9rem_9rem_9rem_auto] sm:items-end"
@@ -188,38 +188,46 @@ export default async function SalesPage({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[56rem] text-left text-[0.8125rem]">
+            <table className="w-full lg:min-w-[56rem] text-left text-[0.8125rem]">
               <thead>
                 <tr className="border-b border-line text-[0.625rem] uppercase tracking-[0.12em] text-muted">
-                  <th className="px-5 py-2.5 font-semibold">Vente</th>
-                  <th className="px-4 py-2.5 font-semibold">Date</th>
-                  <th className="px-4 py-2.5 font-semibold">Client</th>
-                  <th className="px-4 py-2.5 font-semibold">Entrepôt</th>
-                  <th className="px-4 py-2.5 text-right font-semibold">Articles</th>
-                  <th className="px-4 py-2.5 font-semibold">Paiement</th>
-                  <th className="px-4 py-2.5 font-semibold">Statut</th>
+                  <th className="px-4 py-2.5 font-semibold sm:px-5">Vente</th>
+                  <th className="hidden px-4 py-2.5 font-semibold sm:table-cell">Date</th>
+                  <th className="hidden px-4 py-2.5 font-semibold md:table-cell">Client</th>
+                  <th className="hidden px-4 py-2.5 font-semibold lg:table-cell">Entrepôt</th>
+                  <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">
+                    Articles
+                  </th>
+                  <th className="hidden px-4 py-2.5 font-semibold xl:table-cell">Paiement</th>
+                  <th className="hidden px-4 py-2.5 font-semibold sm:table-cell">Statut</th>
                   <th className="px-4 py-2.5 text-right font-semibold">Total</th>
-                  <th className="w-8 px-2 py-2.5" />
+                  <th className="hidden w-8 px-2 py-2.5 sm:table-cell" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {result.items.map((sale) => (
                   <tr key={sale.id} className="group transition-colors hover:bg-surface/60">
-                    <td className="px-5 py-3">
+                    <td className="px-4 py-3 sm:px-5">
                       <Link
                         href={`/sales/${sale.id}`}
                         className="tabular font-mono text-[0.75rem] font-medium group-hover:text-primary-dark"
                       >
                         {sale.number}
                       </Link>
+                      <span className="mt-0.5 block max-w-[10rem] truncate text-[0.75rem] text-muted md:hidden">
+                        {sale.customerName ?? "Client de passage"}
+                      </span>
+                      <span className="tabular mt-0.5 block whitespace-nowrap font-mono text-[0.625rem] text-muted sm:hidden">
+                        {formatDate(sale.createdAt, context.shop.timezone, true)}
+                      </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                    <td className="hidden whitespace-nowrap px-4 py-3 text-muted sm:table-cell">
                       {formatDate(sale.createdAt, context.shop.timezone, true)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="hidden px-4 py-3 md:table-cell">
                       {sale.customerName ?? <span className="text-muted">Passage</span>}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="hidden px-4 py-3 lg:table-cell">
                       {sale.warehouseName ? (
                         <span className="inline-flex items-baseline gap-1.5">
                           <span className="max-w-[9rem] truncate">{sale.warehouseName}</span>
@@ -231,23 +239,28 @@ export default async function SalesPage({
                         <span className="text-muted">—</span>
                       )}
                     </td>
-                    <td className="tabular px-4 py-3 text-right font-mono">
+                    <td className="tabular hidden px-4 py-3 text-right font-mono sm:table-cell">
                       {formatInteger(Number(sale.itemCount))}
                     </td>
-                    <td className="px-4 py-3 text-muted">
+                    <td className="hidden px-4 py-3 text-muted xl:table-cell">
                       {sale.paymentMethod
                         ? (PAYMENT_METHOD_LABELS[sale.paymentMethod] ?? sale.paymentMethod)
                         : "—"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="hidden px-4 py-3 sm:table-cell">
                       <StatusPill tone={sale.status === "completed" ? "success" : "danger"}>
                         {SALE_STATUS_LABELS[sale.status] ?? sale.status}
                       </StatusPill>
                     </td>
                     <td className="tabular px-4 py-3 text-right font-mono font-medium">
                       {formatMoney(sale.totalCents, context.shop.currency)}
+                      <span className="mt-1 flex justify-end sm:hidden">
+                        <StatusPill tone={sale.status === "completed" ? "success" : "danger"}>
+                          {SALE_STATUS_LABELS[sale.status] ?? sale.status}
+                        </StatusPill>
+                      </span>
                     </td>
-                    <td className="px-2 py-3 text-right">
+                    <td className="hidden px-2 py-3 text-right sm:table-cell">
                       <Link
                         href={`/sales/${sale.id}`}
                         aria-label={`Voir la vente ${sale.number}`}

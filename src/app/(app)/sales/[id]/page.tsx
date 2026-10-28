@@ -90,7 +90,7 @@ export default async function SaleDetailPage({
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border border-line bg-white px-4 py-3.5">
+        <div className="rounded-xl border border-line/90 bg-white px-4 py-3.5 shadow-card">
           <p className="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted">
             Total encaissé
           </p>
@@ -98,7 +98,7 @@ export default async function SaleDetailPage({
             {formatMoney(sale.totalCents, currency)}
           </p>
         </div>
-        <div className="rounded-lg border border-line bg-white px-4 py-3.5">
+        <div className="rounded-xl border border-line/90 bg-white px-4 py-3.5 shadow-card">
           <p className="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted">
             Marge
           </p>
@@ -113,7 +113,7 @@ export default async function SaleDetailPage({
               : "Coûts incomplets"}
           </p>
         </div>
-        <div className="rounded-lg border border-line bg-white px-4 py-3.5">
+        <div className="rounded-xl border border-line/90 bg-white px-4 py-3.5 shadow-card">
           <p className="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted">
             Statut
           </p>

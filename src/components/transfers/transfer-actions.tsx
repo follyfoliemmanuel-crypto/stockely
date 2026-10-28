@@ -209,7 +209,7 @@ export function TransferActions({
               return (
                 <div
                   key={item.productId}
-                  className="rounded-lg border border-border bg-surface-subtle p-3 space-y-2 text-sm"
+                  className="rounded-lg border border-line bg-surface-strong p-3 space-y-2 text-sm"
                 >
                   <div className="flex justify-between items-center font-medium">
                     <span>{item.name}</span>
@@ -217,7 +217,7 @@ export function TransferActions({
                       Expédié : <strong>{item.quantitySent}</strong>
                     </span>
                   </div>
-                  <div className="grid grid-cols-[130px_1fr] gap-2 items-center">
+                  <div className="grid items-center gap-2 sm:grid-cols-[130px_1fr]">
                     <Field label="Quantité reçue" htmlFor={`qty-${item.productId}`}>
                       <TextInput
                         id={`qty-${item.productId}`}

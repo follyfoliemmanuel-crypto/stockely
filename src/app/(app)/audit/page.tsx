@@ -82,7 +82,7 @@ export default async function AuditPage({
         description="Historique en ajout seul des connexions, ventes, annulations, mouvements de stock et modifications du catalogue."
       />
 
-      <div className="grid grid-cols-2 divide-x divide-y divide-line overflow-hidden rounded-lg border border-line bg-white sm:grid-cols-4 sm:divide-y-0">
+      <div className="grid grid-cols-2 divide-x divide-y divide-line overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card sm:grid-cols-4 sm:divide-y-0">
         {[
           { label: "Événements aujourd'hui", value: formatInteger(stats.today) },
           { label: "Total conservé", value: formatInteger(stats.total) },
@@ -98,7 +98,7 @@ export default async function AuditPage({
         ))}
       </div>
 
-      <section className="overflow-hidden rounded-lg border border-line bg-white">
+      <section className="overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card">
         <form
           method="get"
           className="grid gap-2 border-b border-line bg-surface/60 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_9rem_9rem_auto] sm:items-end"
@@ -167,14 +167,14 @@ export default async function AuditPage({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[52rem] text-left text-[0.8125rem]">
+            <table className="w-full lg:min-w-[52rem] text-left text-[0.8125rem]">
               <thead>
                 <tr className="border-b border-line text-[0.625rem] uppercase tracking-[0.12em] text-muted">
-                  <th className="px-5 py-2.5 font-semibold">Date</th>
-                  <th className="px-4 py-2.5 font-semibold">Action</th>
-                  <th className="px-4 py-2.5 font-semibold">Objet</th>
-                  <th className="px-4 py-2.5 font-semibold">Utilisateur</th>
-                  <th className="px-5 py-2.5 font-semibold">Détails</th>
+                  <th className="hidden px-5 py-2.5 font-semibold sm:table-cell">Date</th>
+                  <th className="px-4 py-2.5 font-semibold sm:px-5">Action</th>
+                  <th className="hidden px-4 py-2.5 font-semibold md:table-cell">Objet</th>
+                  <th className="hidden px-4 py-2.5 font-semibold lg:table-cell">Utilisateur</th>
+                  <th className="px-4 py-2.5 font-semibold sm:px-5">Détails</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -185,18 +185,21 @@ export default async function AuditPage({
                     : null;
                   return (
                     <tr key={entry.id} className="align-top transition-colors hover:bg-surface/50">
-                      <td className="whitespace-nowrap px-5 py-3 text-muted">
+                      <td className="hidden whitespace-nowrap px-5 py-3 text-muted sm:table-cell">
                         {formatDate(entry.createdAt, context.shop.timezone, true)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 sm:px-5">
                         <StatusPill tone={actionTone(entry.action)}>
                           {auditActionLabel(entry.action)}
                         </StatusPill>
+                        <span className="tabular mt-1 block whitespace-nowrap font-mono text-[0.625rem] text-muted sm:hidden">
+                          {formatDate(entry.createdAt, context.shop.timezone, true)}
+                        </span>
                         <span className="tabular mt-1 block font-mono text-[0.625rem] text-muted">
                           {entry.action}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="hidden px-4 py-3 md:table-cell">
                         {entityLabel ? (
                           href ? (
                             <Link
@@ -217,7 +220,7 @@ export default async function AuditPage({
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="hidden px-4 py-3 lg:table-cell">
                         <span className="block font-medium">
                           {entry.userName ?? "Système"}
                         </span>
@@ -227,7 +230,7 @@ export default async function AuditPage({
                           </span>
                         )}
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-4 py-3 sm:px-5">
                         {entry.metadata && Object.keys(entry.metadata).length > 0 ? (
                           <details>
                             <summary className="cursor-pointer text-[0.75rem] font-medium text-muted hover:text-ink">

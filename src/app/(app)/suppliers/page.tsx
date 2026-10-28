@@ -46,7 +46,7 @@ export default async function SuppliersPage({
         }
       />
 
-      <section className="overflow-hidden rounded-lg border border-line bg-white">
+      <section className="overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card">
         <form
           method="get"
           className="flex flex-col gap-2 border-b border-line bg-surface/60 px-4 py-3 sm:flex-row sm:items-end"
@@ -98,28 +98,35 @@ export default async function SuppliersPage({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[44rem] text-left text-[0.8125rem]">
+            <table className="w-full md:min-w-[44rem] text-left text-[0.8125rem]">
               <thead>
                 <tr className="border-b border-line text-[0.625rem] uppercase tracking-[0.12em] text-muted">
-                  <th className="px-5 py-2.5 font-semibold">Fournisseur</th>
-                  <th className="px-4 py-2.5 font-semibold">Contact</th>
+                  <th className="px-4 py-2.5 font-semibold sm:px-5">Fournisseur</th>
+                  <th className="hidden px-4 py-2.5 font-semibold sm:table-cell">Contact</th>
                   <th className="px-4 py-2.5 text-right font-semibold">Produits</th>
-                  <th className="px-4 py-2.5 font-semibold">Depuis</th>
-                  {canWrite && <th className="px-5 py-2.5 text-right font-semibold">Actions</th>}
+                  <th className="hidden px-4 py-2.5 font-semibold lg:table-cell">Depuis</th>
+                  {canWrite && (
+                    <th className="px-4 py-2.5 text-right font-semibold sm:px-5">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {result.items.map((supplier) => (
                   <tr key={supplier.id} className="transition-colors hover:bg-surface/60">
-                    <td className="px-5 py-3">
+                    <td className="px-4 py-3 sm:px-5">
                       <span className="font-medium">{supplier.name}</span>
                       {supplier.address && (
                         <span className="mt-0.5 block max-w-56 truncate text-[0.6875rem] text-muted">
                           {supplier.address}
                         </span>
                       )}
+                      {supplier.phone && (
+                        <span className="mt-0.5 block text-[0.6875rem] text-muted sm:hidden">
+                          {supplier.phone}
+                        </span>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-muted">
+                    <td className="hidden px-4 py-3 text-muted sm:table-cell">
                       <span className="block">{supplier.phone ?? "—"}</span>
                       {supplier.email && (
                         <span className="block max-w-48 truncate text-[0.6875rem]">
@@ -132,11 +139,11 @@ export default async function SuppliersPage({
                         {formatInteger(supplier.productCount)}
                       </StatusPill>
                     </td>
-                    <td className="px-4 py-3 text-muted">
+                    <td className="hidden px-4 py-3 text-muted lg:table-cell">
                       {formatDate(supplier.createdAt, context.shop.timezone)}
                     </td>
                     {canWrite && (
-                      <td className="px-5 py-3 text-right">
+                      <td className="px-4 py-3 text-right sm:px-5">
                         <Link
                           href={`/suppliers/${supplier.id}/edit`}
                           className="rounded-md px-2 py-1 text-[0.75rem] font-medium text-muted hover:bg-surface hover:text-ink"

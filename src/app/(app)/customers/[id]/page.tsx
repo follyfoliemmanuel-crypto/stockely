@@ -71,7 +71,7 @@ export default async function CustomerDetailPage({
             value: formatDate(customer.createdAt, context.shop.timezone),
           },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-lg border border-line bg-white px-4 py-3.5">
+          <div key={stat.label} className="rounded-xl border border-line/90 bg-white px-4 py-3.5 shadow-card">
             <p className="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted">
               {stat.label}
             </p>

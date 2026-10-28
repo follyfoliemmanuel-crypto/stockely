@@ -86,7 +86,7 @@ export default async function StockPage({
         }
       />
 
-      <div className="grid grid-cols-2 divide-x divide-y divide-line overflow-hidden rounded-lg border border-line bg-white sm:grid-cols-4 sm:divide-y-0">
+      <div className="grid grid-cols-2 divide-x divide-y divide-line overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card sm:grid-cols-4 sm:divide-y-0">
         {[
           { label: "Entrées · 30 j", value: formatInteger(stats.entries), tone: "success" },
           { label: "Sorties · 30 j", value: formatInteger(stats.exits), tone: "danger" },
@@ -111,7 +111,7 @@ export default async function StockPage({
         ))}
       </div>
 
-      <section className="overflow-hidden rounded-lg border border-line bg-white">
+      <section className="overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card">
         <form
           method="get"
           className="grid gap-2 border-b border-line bg-surface/60 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_14rem_10rem_auto] sm:items-end"
@@ -198,24 +198,24 @@ export default async function StockPage({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[48rem] text-left text-[0.8125rem]">
+            <table className="w-full lg:min-w-[48rem] text-left text-[0.8125rem]">
               <thead>
                 <tr className="border-b border-line text-[0.625rem] uppercase tracking-[0.12em] text-muted">
-                  <th className="px-5 py-2.5 font-semibold">Date</th>
-                  <th className="px-4 py-2.5 font-semibold">Produit</th>
-                  <th className="px-4 py-2.5 font-semibold">Type</th>
-                  <th className="px-4 py-2.5 font-semibold">Motif</th>
+                  <th className="hidden px-5 py-2.5 font-semibold sm:table-cell">Date</th>
+                  <th className="px-4 py-2.5 font-semibold sm:px-5">Produit</th>
+                  <th className="hidden px-4 py-2.5 font-semibold sm:table-cell">Type</th>
+                  <th className="hidden px-4 py-2.5 font-semibold md:table-cell">Motif</th>
                   <th className="px-4 py-2.5 text-right font-semibold">Variation</th>
-                  <th className="px-5 py-2.5 font-semibold">Par</th>
+                  <th className="hidden px-5 py-2.5 font-semibold lg:table-cell">Par</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {result.items.map((movement) => (
                   <tr key={movement.id} className="transition-colors hover:bg-surface/60">
-                    <td className="whitespace-nowrap px-5 py-3 text-muted">
+                    <td className="hidden whitespace-nowrap px-5 py-3 text-muted sm:table-cell">
                       {formatDate(movement.createdAt, context.shop.timezone, true)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 sm:px-5">
                       <Link
                         href={`/products/${movement.productId}`}
                         className="font-medium underline-offset-2 hover:text-primary-dark hover:underline"
@@ -225,13 +225,21 @@ export default async function StockPage({
                       <span className="tabular mt-0.5 block font-mono text-[0.6875rem] text-muted">
                         {movement.productSku}
                       </span>
+                      <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 sm:hidden">
+                        <StatusPill tone={movementTone(movement.type)}>
+                          {MOVEMENT_TYPE_LABELS[movement.type] ?? movement.type}
+                        </StatusPill>
+                        <span className="tabular whitespace-nowrap font-mono text-[0.625rem] text-muted">
+                          {formatDate(movement.createdAt, context.shop.timezone, true)}
+                        </span>
+                      </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="hidden px-4 py-3 sm:table-cell">
                       <StatusPill tone={movementTone(movement.type)}>
                         {MOVEMENT_TYPE_LABELS[movement.type] ?? movement.type}
                       </StatusPill>
                     </td>
-                    <td className="max-w-64 truncate px-4 py-3 text-muted">
+                    <td className="hidden max-w-64 truncate px-4 py-3 text-muted md:table-cell">
                       {movement.saleId ? (
                         <Link
                           href={`/sales/${movement.saleId}`}
@@ -252,7 +260,9 @@ export default async function StockPage({
                       {movement.quantityDelta > 0 ? "+" : ""}
                       {formatInteger(movement.quantityDelta)}
                     </td>
-                    <td className="px-5 py-3 text-muted">{movement.userName ?? "Système"}</td>
+                    <td className="hidden px-5 py-3 text-muted lg:table-cell">
+                      {movement.userName ?? "Système"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

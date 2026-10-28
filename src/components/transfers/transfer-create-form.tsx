@@ -143,8 +143,8 @@ export function TransferCreateForm({
       {error && <FormError message={error} />}
       {success && <FormSuccess message={success} />}
 
-      <div className="rounded-xl border border-border bg-surface p-5 shadow-xs">
-        <h3 className="mb-4 text-base font-semibold text-foreground">
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-xs">
+        <h3 className="mb-4 text-base font-semibold text-ink">
           1. Itinéraire du transfert
         </h3>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -201,8 +201,8 @@ export function TransferCreateForm({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-surface p-5 shadow-xs">
-        <h3 className="mb-4 text-base font-semibold text-foreground">
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-xs">
+        <h3 className="mb-4 text-base font-semibold text-ink">
           2. Articles à transférer
         </h3>
 
@@ -243,9 +243,9 @@ export function TransferCreateForm({
         </div>
 
         {items.length > 0 ? (
-          <div className="mt-5 overflow-x-auto rounded-lg border border-border">
+          <div className="mt-5 overflow-x-auto rounded-lg border border-line">
             <table className="w-full text-left text-sm">
-              <thead className="bg-surface-subtle text-xs font-semibold uppercase text-muted">
+              <thead className="bg-surface-strong text-xs font-semibold uppercase text-muted">
                 <tr>
                   <th className="px-4 py-2.5">Produit</th>
                   <th className="px-4 py-2.5">SKU</th>
@@ -253,12 +253,12 @@ export function TransferCreateForm({
                   <th className="px-4 py-2.5 text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-line">
                 {items.map((item) => (
-                  <tr key={item.productId} className="hover:bg-surface-subtle/50">
-                    <td className="px-4 py-3 font-medium text-foreground">{item.name}</td>
+                  <tr key={item.productId} className="hover:bg-surface-strong/50">
+                    <td className="px-4 py-3 font-medium text-ink">{item.name}</td>
                     <td className="px-4 py-3 text-muted">{item.sku}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-foreground">
+                    <td className="px-4 py-3 text-right font-semibold text-ink">
                       {item.quantity}
                     </td>
                     <td className="px-4 py-3 text-center">

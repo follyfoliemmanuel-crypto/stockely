@@ -107,7 +107,7 @@ export function CategoryManager({
     <div className="space-y-4">
       <FormError message={error && !open ? error : null} />
 
-      <section className="overflow-hidden rounded-lg border border-line bg-white">
+      <section className="overflow-hidden rounded-2xl border border-line/90 bg-white shadow-card">
         {categories.length === 0 ? (
           <div className="p-4">
             <EmptyState
@@ -123,21 +123,67 @@ export function CategoryManager({
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[36rem] text-left text-[0.8125rem]">
+          <>
+            <ul className="divide-y divide-line md:hidden">
+              {categories.map((category) => (
+                <li key={category.id} className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium">{category.name}</p>
+                      {category.description && (
+                        <p className="mt-0.5 text-[0.75rem] leading-5 text-muted">
+                          {category.description}
+                        </p>
+                      )}
+                    </div>
+                    <StatusPill
+                      tone={category.productCount > 0 ? "success" : "neutral"}
+                    >
+                      {category.productCount} produit
+                      {category.productCount > 1 ? "s" : ""}
+                    </StatusPill>
+                  </div>
+                  {canWrite && (
+                    <div className="mt-2 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(category)}
+                        className="rounded-md px-2 py-1 text-[0.75rem] font-medium text-muted hover:bg-surface hover:text-ink"
+                      >
+                        Modifier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(category)}
+                        disabled={deletingId === category.id}
+                        className="rounded-md px-2 py-1 text-[0.75rem] font-medium text-danger hover:bg-danger-soft disabled:opacity-50"
+                      >
+                        {deletingId === category.id ? "…" : "Supprimer"}
+                      </button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full md:min-w-[36rem] text-left text-[0.8125rem]">
               <thead>
                 <tr className="border-b border-line text-[0.625rem] uppercase tracking-[0.12em] text-muted">
-                  <th className="px-5 py-2.5 font-semibold">Catégorie</th>
-                  <th className="px-4 py-2.5 font-semibold">Description</th>
+                  <th className="px-4 py-2.5 font-semibold sm:px-5">Catégorie</th>
+                  <th className="hidden px-4 py-2.5 font-semibold md:table-cell">
+                    Description
+                  </th>
                   <th className="px-4 py-2.5 text-right font-semibold">Produits</th>
-                  {canWrite && <th className="px-5 py-2.5 text-right font-semibold">Actions</th>}
+                  {canWrite && (
+                    <th className="px-4 py-2.5 text-right font-semibold sm:px-5">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {categories.map((category) => (
                   <tr key={category.id} className="transition-colors hover:bg-surface/60">
-                    <td className="px-5 py-3 font-medium">{category.name}</td>
-                    <td className="max-w-md px-4 py-3 text-muted">
+                    <td className="px-4 py-3 font-medium sm:px-5">{category.name}</td>
+                    <td className="hidden max-w-md px-4 py-3 text-muted md:table-cell">
                       {category.description ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -146,7 +192,7 @@ export function CategoryManager({
                       </StatusPill>
                     </td>
                     {canWrite && (
-                      <td className="px-5 py-3 text-right">
+                      <td className="px-4 py-3 text-right sm:px-5">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
@@ -170,7 +216,8 @@ export function CategoryManager({
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </section>
 
