@@ -71,7 +71,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6 sm:py-14">
           <div className="w-full max-w-[26rem]">
             <div className="mb-8 hidden items-center gap-3 lg:flex">
-              <LogoMark className="h-10 w-10" />
+              <LogoMark size="lg" />
               <div>
                 <p className="text-[0.9375rem] font-semibold">Stockely</p>
                 <p className="text-[0.75rem] text-muted">Gestion de stock &amp; ventes</p>

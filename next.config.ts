@@ -50,6 +50,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   serverExternalPackages: ["@node-rs/argon2", "pg"],
+  images: {
+    // Next 16 sert par défaut les images optimisées en pièce jointe
+    // (`Content-Disposition: attachment`), ce qui empêche le navigateur
+    // de les afficher dans une balise <img>. On rétablit le rendu inline.
+    contentDispositionType: "inline",
+  },
   async headers() {
     return [
       {

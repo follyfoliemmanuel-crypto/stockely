@@ -135,6 +135,18 @@ journal d'audit. Architecture multi-boutiques avec isolation stricte des donnée
 - **Zod** pour la validation des entrées
 - **Vitest** pour les tests unitaires et d'intégration
 
+### Identité visuelle
+
+Le logo source (`logo/logo.png`) est décliné en assets PNG dans `public/brand/` :
+
+- `stockely-mark.png` — pastille verte seule, pour les en-têtes compacts ;
+- `stockely-logo.png` — lockup horizontal pour les fonds clairs ;
+- `stockely-logo-white.png` — lockup horizontal pour les fonds sombres.
+
+Les favicons (`src/app/icon.png`, `src/app/apple-icon.png`) sont dérivés de la
+pastille. Les composants `Logo`, `LogoMark` et `LogoLockup`
+(`src/components/brand/logo.tsx`) centralisent leur usage.
+
 ## Arborescence
 
 ```

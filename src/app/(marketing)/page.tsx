@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { PublicFooter } from "@/components/marketing/public-footer";
 import { PublicHeader } from "@/components/marketing/public-header";
-import { LogoMark } from "@/components/brand/logo";
+import { LogoLockup } from "@/components/brand/logo";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
@@ -138,8 +138,7 @@ export default function HomePage() {
               <div className="relative overflow-hidden rounded-xl border border-line bg-white shadow-float">
                 <div className="flex items-center justify-between border-b border-line px-4 py-3">
                   <div className="flex items-center gap-2.5">
-                    <LogoMark className="h-6 w-6" />
-                    <span className="text-[0.8125rem] font-semibold">Stockely</span>
+                    <LogoLockup size="sm" />
                     <span className="text-[0.75rem] text-muted">/ Accueil</span>
                   </div>
                   <span className="rounded-full border border-line bg-surface px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-muted">
@@ -405,6 +404,7 @@ export default function HomePage() {
         <section className="bg-primary-dark">
           <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between">
             <div>
+              <LogoLockup tone="light" size="md" className="mb-5" />
               <h2 className="text-balance text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                 Ouvrez votre espace de gestion en quelques minutes.
               </h2>

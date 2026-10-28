@@ -1,24 +1,73 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/cn";
 
-export function LogoMark({ className }: { className?: string }) {
+const markSizes = {
+  sm: "h-6 w-6",
+  md: "h-8 w-8",
+  lg: "h-10 w-10",
+} as const;
+
+const lockupSizes = {
+  sm: "h-5",
+  md: "h-7",
+  lg: "h-8",
+} as const;
+
+/**
+ * Marque seule (pastille verte) : en-têtes compacts, aperçus.
+ * Le fichier source est un PNG 512×512 dérivé du logo fourni.
+ */
+export function LogoMark({
+  size = "md",
+  className,
+}: {
+  size?: keyof typeof markSizes;
+  className?: string;
+}) {
   return (
-    <svg
-      viewBox="0 0 32 32"
-      role="img"
-      aria-label="Stockely"
-      className={cn("h-8 w-8", className)}
-    >
-      <rect x="2" y="2" width="28" height="28" rx="9" fill="#E9D66B" />
-      <path
-        d="M10 11h12M10 16h12M10 21h7"
-        stroke="#1F5C43"
-        strokeWidth="2.3"
-        strokeLinecap="round"
-      />
-      <circle cx="23" cy="21" r="2.5" fill="#2E7D5B" />
-    </svg>
+    <Image
+      src="/brand/stockely-mark.png"
+      alt="Stockely"
+      width={512}
+      height={512}
+      sizes="48px"
+      loading="eager"
+      className={cn(markSizes[size], className)}
+    />
+  );
+}
+
+/**
+ * Logo horizontal complet : pastille + mot-symbole.
+ * `tone="light"` sert le mot-symbole blanc pour les fonds sombres.
+ */
+export function LogoLockup({
+  tone = "dark",
+  size = "lg",
+  loading = "lazy",
+  className,
+}: {
+  tone?: "dark" | "light";
+  size?: keyof typeof lockupSizes;
+  loading?: "eager" | "lazy";
+  className?: string;
+}) {
+  return (
+    <Image
+      src={
+        tone === "light"
+          ? "/brand/stockely-logo-white.png"
+          : "/brand/stockely-logo.png"
+      }
+      alt="Stockely"
+      width={1411}
+      height={300}
+      sizes="220px"
+      loading={loading}
+      className={cn(lockupSizes[size], "w-auto", className)}
+    />
   );
 }
 
@@ -34,16 +83,11 @@ export function Logo({
       href="/"
       aria-label="Stockely — accueil"
       className={cn(
-        "inline-flex items-center gap-2.5 rounded-md focus-visible:outline-offset-4",
+        "inline-flex items-center rounded-md focus-visible:outline-offset-4",
         className,
       )}
     >
-      <LogoMark />
-      {!compact && (
-        <span className="text-[1.125rem] font-bold tracking-[-0.035em] text-ink">
-          Stockely
-        </span>
-      )}
+      {compact ? <LogoMark size="md" /> : <LogoLockup loading="eager" />}
     </Link>
   );
 }
