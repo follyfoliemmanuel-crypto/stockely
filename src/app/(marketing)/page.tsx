@@ -104,7 +104,7 @@ export default function HomePage() {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className={buttonClasses({ size: "lg" })}>
-                  Créer ma boutique
+                  Créer mon espace
                   <ArrowIcon />
                 </Link>
                 <a
@@ -406,7 +406,7 @@ export default function HomePage() {
           <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-balance text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                Ouvrez votre boutique en quelques minutes.
+                Ouvrez votre espace de gestion en quelques minutes.
               </h2>
               <p className="mt-2 text-[0.9375rem] text-white">
                 Aucune installation. Vos données restent isolées, votre historique
@@ -421,7 +421,7 @@ export default function HomePage() {
                 className: "shrink-0 border-transparent bg-white text-primary-dark hover:bg-primary-soft",
               })}
             >
-              Créer ma boutique
+              Créer mon espace
               <ArrowIcon />
             </Link>
           </div>

@@ -38,7 +38,7 @@ export function PublicHeader() {
             Se connecter
           </Link>
           <Link href="/register" className={buttonClasses({ size: "sm" })}>
-            Créer ma boutique
+            Créer mon espace
           </Link>
         </div>
       </div>

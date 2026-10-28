@@ -127,12 +127,12 @@ export function LoginForm({
       </form>
 
       <p className="mt-6 border-t border-line pt-6 text-[0.8125rem] text-muted">
-        Pas encore de boutique ?{" "}
+        Pas encore de compte ?{" "}
         <Link
           href="/register"
           className="font-medium text-primary-dark underline-offset-4 hover:underline"
         >
-          Créer un compte
+          Créer mon espace
         </Link>
       </p>
     </div>

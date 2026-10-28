@@ -15,7 +15,7 @@ import {
   SectionCard,
   StatusPill,
 } from "@/components/ui/page";
-import { formatDate, formatInteger, formatMoney } from "@/lib/money";
+import { formatDate, formatDayTime, formatInteger, formatMoney } from "@/lib/money";
 import { getAuthContext } from "@/server/auth/context";
 import { resolveRequestWarehouse } from "@/server/auth/warehouse";
 import { getDashboardOverview } from "@/server/services/dashboard";
@@ -287,8 +287,8 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(19rem,1fr)]">
-        <div className="space-y-6">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(19rem,1fr)]">
+        <div className="min-w-0 space-y-6">
           <SectionCard
             title="Activité des ventes"
             description="Chiffre d'affaires des 7 derniers jours, toute la boutique."
@@ -351,22 +351,22 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="data-table min-w-[36rem]">
+                <table className="data-table">
                   <thead>
                     <tr>
                       <th scope="col" className="px-5 py-3 font-bold sm:px-6">
                         Client
                       </th>
-                      <th scope="col" className="px-5 py-3 font-bold">
+                      <th scope="col" className="hidden px-4 py-3 font-bold sm:table-cell">
                         Vente
                       </th>
-                      <th scope="col" className="px-5 py-3 text-right font-bold">
+                      <th scope="col" className="px-4 py-3 text-right font-bold">
                         Montant
                       </th>
-                      <th scope="col" className="px-5 py-3 font-bold">
+                      <th scope="col" className="hidden px-5 py-3 font-bold sm:table-cell">
                         Statut
                       </th>
-                      <th scope="col" className="px-5 py-3 text-right font-bold sm:px-6">
+                      <th scope="col" className="hidden px-4 py-3 text-right font-bold sm:table-cell">
                         Date
                       </th>
                     </tr>
@@ -380,12 +380,17 @@ export default async function DashboardPage() {
                               name={sale.customerName ?? "Client de passage"}
                               size="sm"
                             />
-                            <span className="max-w-[10rem] truncate font-semibold">
-                              {sale.customerName ?? "Client de passage"}
+                            <span className="min-w-0">
+                              <span className="block max-w-[10rem] truncate font-semibold">
+                                {sale.customerName ?? "Client de passage"}
+                              </span>
+                              <span className="tabular mt-0.5 block whitespace-nowrap font-mono text-[0.625rem] text-muted sm:hidden">
+                                {formatDate(sale.createdAt, context.shop.timezone)}
+                              </span>
                             </span>
                           </div>
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="hidden whitespace-nowrap px-4 py-3 sm:table-cell">
                           <Link
                             href={`/sales/${sale.id}`}
                             className="tabular font-mono text-[0.6875rem] text-muted underline-offset-4 hover:text-primary-dark hover:underline"
@@ -393,16 +398,16 @@ export default async function DashboardPage() {
                             {sale.number}
                           </Link>
                         </td>
-                        <td className="tabular px-5 py-3 text-right font-mono font-semibold">
+                        <td className="tabular px-4 py-3 text-right font-mono font-semibold">
                           {formatMoney(sale.totalCents, context.shop.currency)}
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="hidden px-4 py-3 sm:table-cell">
                           <StatusPill tone={sale.status === "cancelled" ? "danger" : "success"}>
                             {sale.status === "cancelled" ? "Annulée" : "Encaissée"}
                           </StatusPill>
                         </td>
-                        <td className="tabular px-5 py-3 text-right font-mono text-[0.6875rem] text-muted sm:px-6">
-                          {formatDate(sale.createdAt, context.shop.timezone, true)}
+                        <td className="tabular hidden whitespace-nowrap px-4 py-3 text-right font-mono text-[0.6875rem] text-muted sm:table-cell">
+                          {formatDate(sale.createdAt, context.shop.timezone)}
                         </td>
                       </tr>
                     ))}
@@ -434,22 +439,22 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="data-table min-w-[38rem]">
+                <table className="data-table">
                   <thead>
                     <tr>
                       <th scope="col" className="px-5 py-3 font-bold sm:px-6">
                         Produit
                       </th>
-                      <th scope="col" className="px-5 py-3 font-bold">
+                      <th scope="col" className="hidden px-5 py-3 font-bold sm:table-cell">
                         Type
                       </th>
-                      <th scope="col" className="px-5 py-3 font-bold">
+                      <th scope="col" className="hidden px-5 py-3 font-bold sm:table-cell">
                         Entrepôt
                       </th>
-                      <th scope="col" className="px-5 py-3 text-right font-bold">
+                      <th scope="col" className="px-4 py-3 text-right font-bold">
                         Quantité
                       </th>
-                      <th scope="col" className="px-5 py-3 text-right font-bold sm:px-6">
+                      <th scope="col" className="hidden px-4 py-3 text-right font-bold sm:table-cell">
                         Date
                       </th>
                     </tr>
@@ -458,25 +463,28 @@ export default async function DashboardPage() {
                     {data.recentMovements.map((movement) => (
                       <tr key={movement.id}>
                         <td className="px-5 py-3 font-semibold sm:px-6">
-                          {movement.productName}
+                          <span className="block">{movement.productName}</span>
+                          <span className="tabular mt-0.5 block whitespace-nowrap font-mono text-[0.625rem] font-normal text-muted sm:hidden">
+                            {formatDayTime(movement.createdAt, context.shop.timezone)}
+                          </span>
                         </td>
-                        <td className="px-5 py-3 text-muted">
+                        <td className="hidden px-5 py-3 text-muted sm:table-cell">
                           {MOVEMENT_LABELS[movement.type] ?? movement.type}
                         </td>
-                        <td className="px-5 py-3 text-muted">
+                        <td className="hidden px-5 py-3 text-muted sm:table-cell">
                           {movement.warehouseName ?? "—"}
                         </td>
                         <td
                           className={cn(
-                            "tabular px-5 py-3 text-right font-mono font-semibold",
+                            "tabular px-4 py-3 text-right font-mono font-semibold",
                             movement.quantityDelta > 0 ? "text-primary-dark" : "text-ink",
                           )}
                         >
                           {movement.quantityDelta > 0 ? "+" : ""}
                           {formatInteger(movement.quantityDelta)}
                         </td>
-                        <td className="tabular px-5 py-3 text-right font-mono text-[0.6875rem] text-muted sm:px-6">
-                          {formatDate(movement.createdAt, context.shop.timezone, true)}
+                        <td className="tabular hidden whitespace-nowrap px-4 py-3 text-right font-mono text-[0.6875rem] text-muted sm:table-cell">
+                          {formatDayTime(movement.createdAt, context.shop.timezone)}
                         </td>
                       </tr>
                     ))}
@@ -487,7 +495,7 @@ export default async function DashboardPage() {
           </SectionCard>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <SectionCard
             title="Répartition du stock"
             description="Unités disponibles par entrepôt actif."

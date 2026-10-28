@@ -19,7 +19,7 @@ export function PublicFooter() {
             Se connecter
           </Link>
           <Link href="/register" className="text-muted transition-colors hover:text-ink">
-            Créer une boutique
+            Créer mon espace
           </Link>
           <a href="#securite" className="text-muted transition-colors hover:text-ink">
             Sécurité

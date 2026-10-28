@@ -76,7 +76,7 @@ export function SectionCard({
               <p className="mt-0.5 text-[0.75rem] leading-5 text-muted">{description}</p>
             )}
           </div>
-          {actions}
+          <div className="shrink-0">{actions}</div>
         </div>
       )}
       <div className={bodyClassName}>{children}</div>
@@ -126,7 +126,7 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold",
         tones[tone],
       )}
     >

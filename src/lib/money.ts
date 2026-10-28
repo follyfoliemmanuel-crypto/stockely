@@ -21,16 +21,26 @@ const ZERO_DECIMAL_CURRENCIES = new Set([
  */
 export function formatMoney(cents: number, currency: string): string {
   const zeroDecimal = ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase());
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-    minimumFractionDigits: zeroDecimal ? 0 : 2,
-    maximumFractionDigits: zeroDecimal ? 0 : 2,
-  }).format(cents / 100);
+  return normalizeSpaces(
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: currency.toUpperCase(),
+      minimumFractionDigits: zeroDecimal ? 0 : 2,
+      maximumFractionDigits: zeroDecimal ? 0 : 2,
+    }).format(cents / 100),
+  );
 }
 
 export function formatInteger(value: number): string {
-  return new Intl.NumberFormat("fr-FR").format(value);
+  return normalizeSpaces(new Intl.NumberFormat("fr-FR").format(value));
+}
+
+/**
+ * Les espaces fines insécables de `Intl` sont peu lisibles dans les grands
+ * chiffres (KPI) : on les remplace par des espaces insécables standard.
+ */
+function normalizeSpaces(value: string): string {
+  return value.replace(/\u202f/g, "\u00a0");
 }
 
 /** Convertit une saisie utilisateur (unités majeures) en unité mineure entière. */
@@ -61,6 +71,18 @@ export function formatDate(
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
     ...(withTime ? { timeStyle: "short" } : {}),
+    timeZone,
+  }).format(date);
+}
+
+/** Date et heure compactes pour les listes denses (ex. « 28 oct., 14:16 »). */
+export function formatDayTime(value: Date | string, timeZone: string): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
     timeZone,
   }).format(date);
 }

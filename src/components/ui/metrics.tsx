@@ -251,11 +251,11 @@ export function DonutChart({
               : "var(--color-surface-strong)",
         }}
       />
-      <div className="absolute inset-[19%] flex flex-col items-center justify-center rounded-full bg-white text-center shadow-[inset_0_0_0_1px_rgb(229_229_218/0.9)]">
-        <span className="tabular text-[1.05rem] font-extrabold tracking-[-0.04em] text-ink">
+      <div className="absolute inset-[19%] flex flex-col items-center justify-center gap-0.5 overflow-hidden rounded-full bg-white px-2 text-center shadow-[inset_0_0_0_1px_rgb(229_229_218/0.9)]">
+        <span className="tabular text-[1.05rem] font-extrabold leading-none tracking-[-0.04em] text-ink">
           {centerValue}
         </span>
-        <span className="mt-0.5 max-w-[7rem] text-[0.625rem] font-medium leading-4 text-muted">
+        <span className="text-[0.5625rem] font-medium leading-[0.85rem] text-balance text-muted">
           {centerLabel}
         </span>
       </div>

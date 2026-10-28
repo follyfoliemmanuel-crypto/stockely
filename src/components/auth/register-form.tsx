@@ -59,9 +59,9 @@ export function RegisterForm() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-[-0.025em]">Créer ma boutique</h1>
+      <h1 className="text-2xl font-semibold tracking-[-0.025em]">Créer mon espace stock</h1>
       <p className="mt-2 text-[0.875rem] leading-6 text-muted">
-        Votre espace est prêt immédiatement. Vous en êtes le propriétaire.
+        Votre espace de gestion est prêt immédiatement. Vous en êtes le propriétaire.
       </p>
 
       <div className="mt-6">
@@ -151,7 +151,7 @@ export function RegisterForm() {
         </Field>
 
         <Button type="submit" className="w-full" size="lg" loading={loading}>
-          Créer ma boutique
+          Créer mon espace
         </Button>
 
         <p className="text-[0.75rem] leading-5 text-muted">

@@ -101,7 +101,7 @@ export default async function ProductsPage({
       <PageHeader
         eyebrow="Catalogue"
         title="Produits"
-        description={`Votre catalogue, les niveaux de stock de l'entrepôt ${warehouse.name} et les prix de vente de la boutique active.`}
+        description={`Votre catalogue, les niveaux de stock de ${warehouse.name} et les prix de vente de la boutique active.`}
         actions={
           canWrite ? (
             <Link href="/products/new" className={buttonClasses({ size: "sm" })}>
@@ -124,7 +124,7 @@ export default async function ProductsPage({
           <KpiCard
             label="Unités en stock"
             value={formatInteger(stats.units)}
-            hint={`Entrepôt ${warehouse.name} · ${formatMoney(stats.valueCents, currency)} de valeur`}
+            hint={`${warehouse.name} · ${formatMoney(stats.valueCents, currency)} de valeur`}
             icon="boxes"
             tone="accent"
           />
@@ -159,10 +159,10 @@ export default async function ProductsPage({
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]">
         <SectionCard
           title="Tous les produits"
-          description={`${formatInteger(result.total)} résultat${result.total > 1 ? "s" : ""} dans l'entrepôt ${warehouse.name}.`}
+          description={`${formatInteger(result.total)} résultat${result.total > 1 ? "s" : ""} pour ${warehouse.name}.`}
           className="min-w-0"
         >
           <form
@@ -273,25 +273,25 @@ export default async function ProductsPage({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="data-table min-w-[44rem]">
+              <table className="data-table md:min-w-[44rem]">
                 <thead>
                   <tr>
-                    <th scope="col" className="px-5 py-3 font-bold sm:px-6">
+                    <th scope="col" className="px-4 py-3 font-bold sm:px-5 md:px-6">
                       Produit
                     </th>
-                    <th scope="col" className="px-5 py-3 font-bold">
+                    <th scope="col" className="hidden px-5 py-3 font-bold md:table-cell">
                       Catégorie
                     </th>
-                    <th scope="col" className="px-5 py-3 text-right font-bold">
+                    <th scope="col" className="hidden px-5 py-3 text-right font-bold sm:table-cell">
                       Prix
                     </th>
-                    <th scope="col" className="px-5 py-3 text-right font-bold">
+                    <th scope="col" className="px-4 py-3 text-right font-bold sm:px-5">
                       Stock
                     </th>
-                    <th scope="col" className="px-5 py-3 font-bold">
+                    <th scope="col" className="px-4 py-3 font-bold sm:px-5">
                       État
                     </th>
-                    <th scope="col" className="w-10 px-3 py-3">
+                    <th scope="col" className="hidden w-10 px-3 py-3 sm:table-cell">
                       <span className="sr-only">Ouvrir</span>
                     </th>
                   </tr>
@@ -299,15 +299,15 @@ export default async function ProductsPage({
                 <tbody className="divide-y divide-line/70">
                   {result.items.map((product) => (
                     <tr key={product.id} className="group">
-                      <td className="px-5 py-3 sm:px-6">
+                      <td className="px-4 py-3 sm:px-5 md:px-6">
                         <Link href={`/products/${product.id}`} className="flex items-center gap-3">
                           <span
                             aria-hidden="true"
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-[0.6875rem] font-bold text-accent-ink"
+                            className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-[0.6875rem] font-bold text-accent-ink sm:flex"
                           >
                             {initialsFromName(product.name)}
                           </span>
-                          <span className="min-w-0">
+                          <span className="min-w-0 max-w-[11rem] md:max-w-none">
                             <span className="block truncate font-semibold text-ink group-hover:text-primary-dark">
                               {product.name}
                             </span>
@@ -318,13 +318,13 @@ export default async function ProductsPage({
                           </span>
                         </Link>
                       </td>
-                      <td className="px-5 py-3 text-muted">
+                      <td className="hidden px-5 py-3 text-muted md:table-cell">
                         {product.categoryName ?? <span className="text-muted/60">—</span>}
                       </td>
-                      <td className="tabular px-5 py-3 text-right font-mono font-semibold">
+                      <td className="tabular hidden px-5 py-3 text-right font-mono font-semibold sm:table-cell">
                         {formatMoney(product.priceCents, currency)}
                       </td>
-                      <td className="tabular px-5 py-3 text-right font-mono">
+                      <td className="tabular px-4 py-3 text-right font-mono sm:px-5">
                         <span
                           className={cn(
                             "font-semibold",
@@ -337,11 +337,11 @@ export default async function ProductsPage({
                           {formatInteger(product.quantity)}
                         </span>
                         <span className="ml-1 text-[0.625rem] text-muted">u.</span>
-                        <span className="mt-0.5 block font-mono text-[0.625rem] text-muted">
+                        <span className="mt-0.5 block whitespace-nowrap font-mono text-[0.625rem] text-muted">
                           min. {formatInteger(product.minStock)}
                         </span>
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-4 py-3 sm:px-5">
                         {product.isArchived ? (
                           <StatusPill>Archivé</StatusPill>
                         ) : (
@@ -351,7 +351,7 @@ export default async function ProductsPage({
                           />
                         )}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="hidden px-3 py-3 text-right sm:table-cell">
                         <Link
                           href={`/products/${product.id}`}
                           aria-label={`Voir ${product.name}`}

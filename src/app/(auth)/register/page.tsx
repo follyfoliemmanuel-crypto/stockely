@@ -6,7 +6,7 @@ import { getAuthContext } from "@/server/auth/context";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Créer ma boutique",
+  title: "Créer mon espace",
   robots: { index: false, follow: false },
 };
 

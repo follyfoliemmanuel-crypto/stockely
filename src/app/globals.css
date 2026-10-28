@@ -101,6 +101,7 @@
 
 /* Les tableaux restent denses, mais respirent. */
 .data-table {
+  position: relative;
   width: 100%;
   border-collapse: collapse;
   text-align: left;
@@ -123,6 +124,25 @@
 
 .data-table tbody tr:hover {
   background-color: rgb(250 250 245 / 0.9);
+}
+
+/* Navigation latérale : indice de défilement discret mais visible. */
+.nav-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+.nav-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background-color: var(--color-line-strong);
 }
 
 /* Apparition sobre, uniquement pour le contenu principal. */

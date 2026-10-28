@@ -96,7 +96,7 @@ export default async function AppLayout({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-3 py-5">
+        <div className="nav-scroll flex-1 overflow-y-auto px-3 py-5">
           <NavLinks groups={groups} />
         </div>
 

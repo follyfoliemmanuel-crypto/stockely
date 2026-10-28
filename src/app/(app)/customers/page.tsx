@@ -118,7 +118,7 @@ export default async function CustomersPage({
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <SectionCard
           title="Répertoire clients"
           description={`${formatInteger(result.total)} fiche${result.total > 1 ? "s" : ""} client${result.total > 1 ? "s" : ""}.`}
@@ -184,25 +184,25 @@ export default async function CustomersPage({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="data-table min-w-[46rem]">
+              <table className="data-table xl:min-w-[38rem]">
                 <thead>
                   <tr>
-                    <th scope="col" className="px-5 py-3 font-bold sm:px-6">
+                    <th scope="col" className="px-4 py-3 font-bold sm:px-5 md:px-6">
                       Client
                     </th>
-                    <th scope="col" className="px-5 py-3 font-bold">
+                    <th scope="col" className="hidden px-5 py-3 font-bold md:table-cell">
                       Contact
                     </th>
-                    <th scope="col" className="px-5 py-3 text-right font-bold">
+                    <th scope="col" className="hidden px-5 py-3 text-right font-bold sm:table-cell">
                       Achats
                     </th>
-                    <th scope="col" className="px-5 py-3 text-right font-bold">
+                    <th scope="col" className="px-4 py-3 text-right font-bold sm:px-5">
                       Total dépensé
                     </th>
-                    <th scope="col" className="px-5 py-3 font-bold">
+                    <th scope="col" className="hidden whitespace-nowrap px-5 py-3 font-bold xl:table-cell">
                       Depuis
                     </th>
-                    <th scope="col" className="w-10 px-3 py-3">
+                    <th scope="col" className="hidden w-10 px-3 py-3 sm:table-cell">
                       <span className="sr-only">Ouvrir</span>
                     </th>
                   </tr>
@@ -210,7 +210,7 @@ export default async function CustomersPage({
                 <tbody className="divide-y divide-line/70">
                   {result.items.map((customer) => (
                     <tr key={customer.id} className="group">
-                      <td className="px-5 py-3 sm:px-6">
+                      <td className="px-4 py-3 sm:px-5 md:px-6">
                         <Link
                           href={`/customers/${customer.id}`}
                           className="flex items-center gap-3"
@@ -228,7 +228,7 @@ export default async function CustomersPage({
                           </span>
                         </Link>
                       </td>
-                      <td className="px-5 py-3 text-muted">
+                      <td className="hidden px-5 py-3 text-muted md:table-cell">
                         <span className="block">{customer.phone ?? "—"}</span>
                         {customer.email && (
                           <span className="block max-w-48 truncate text-[0.6875rem]">
@@ -236,18 +236,18 @@ export default async function CustomersPage({
                           </span>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-right">
+                      <td className="hidden px-5 py-3 text-right sm:table-cell">
                         <StatusPill tone={customer.salesCount > 0 ? "success" : "neutral"}>
                           {formatInteger(customer.salesCount)}
                         </StatusPill>
                       </td>
-                      <td className="tabular px-5 py-3 text-right font-mono font-semibold">
+                      <td className="tabular px-4 py-3 text-right font-mono font-semibold sm:px-5">
                         {formatMoney(customer.spentCents, currency)}
                       </td>
-                      <td className="px-5 py-3 text-[0.75rem] text-muted">
+                      <td className="hidden whitespace-nowrap px-5 py-3 text-[0.75rem] text-muted xl:table-cell">
                         {formatDate(customer.createdAt, context.shop.timezone)}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="hidden px-3 py-3 text-right sm:table-cell">
                         <Link
                           href={`/customers/${customer.id}`}
                           aria-label={`Voir ${customer.name}`}
