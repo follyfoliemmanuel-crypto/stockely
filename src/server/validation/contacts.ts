@@ -23,5 +23,10 @@ export const supplierSchema = z.object({
   notes: optionalText(1_000),
 });
 
+/** Recherche utilisée par le sélecteur de client des formulaires de vente. */
+export const customerOptionsQuerySchema = z.object({
+  q: z.string().max(100).optional().catch(undefined),
+});
+
 export type CustomerInput = z.infer<typeof customerSchema>;
 export type SupplierInput = z.infer<typeof supplierSchema>;

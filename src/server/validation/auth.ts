@@ -54,15 +54,29 @@ export const resetPasswordSchema = z.object({
  * un `state` est un jeton base64url généré par l'application, un `code`
  * d'autorisation reste court et imprimable.
  */
+const oauthState = z
+  .string()
+  .min(32, "État OAuth invalide.")
+  .max(256, "État OAuth invalide.")
+  .regex(/^[A-Za-z0-9_-]+$/, "État OAuth invalide.");
+
+const oauthCode = z
+  .string()
+  .min(8, "Code OAuth invalide.")
+  .max(2_048, "Code OAuth invalide.")
+  .regex(/^[\x21-\x7E]+$/, "Code OAuth invalide.");
+
 export const googleCallbackSchema = z.object({
-  state: z
-    .string()
-    .min(32, "État OAuth invalide.")
-    .max(256, "État OAuth invalide.")
-    .regex(/^[A-Za-z0-9_-]+$/, "État OAuth invalide."),
-  code: z
-    .string()
-    .min(8, "Code OAuth invalide.")
-    .max(2_048, "Code OAuth invalide.")
-    .regex(/^[\x21-\x7E]+$/, "Code OAuth invalide."),
+  state: oauthState,
+  code: oauthCode,
+});
+
+/**
+ * Query string du callback Google : Google peut renvoyer `error` à la place
+ * de `code`/`state` (consentement refusé, configuration invalide…).
+ */
+export const googleCallbackQuerySchema = z.object({
+  error: z.string().max(100, "Erreur OAuth invalide.").optional(),
+  state: oauthState.optional(),
+  code: oauthCode.optional(),
 });

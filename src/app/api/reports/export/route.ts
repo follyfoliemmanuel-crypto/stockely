@@ -1,12 +1,13 @@
 import { requireAuth, requirePermission } from "@/server/auth/context";
 import { writeAudit } from "@/server/audit";
 import { getDb } from "@/server/db";
-import { route } from "@/server/http";
+import { readQuery, route } from "@/server/http";
 import { resolveReportRange } from "@/lib/report-range";
 import {
   buildInventoryCsv,
   buildSalesCsv,
 } from "@/server/services/reports";
+import { reportExportQuerySchema } from "@/server/validation/reports";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +20,9 @@ export const GET = route(async (request: Request) => {
   const context = await requireAuth();
   requirePermission(context, "reports.export");
 
-  const url = new URL(request.url);
-  const type = url.searchParams.get("type") === "inventory" ? "inventory" : "sales";
-  const range = resolveReportRange(
-    url.searchParams.get("from") ?? undefined,
-    url.searchParams.get("to") ?? undefined,
-  );
+  const query = readQuery(request, reportExportQuerySchema);
+  const type = query.type;
+  const range = resolveReportRange(query.from, query.to);
 
   const result =
     type === "inventory"

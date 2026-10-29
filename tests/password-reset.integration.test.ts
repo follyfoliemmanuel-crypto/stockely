@@ -35,6 +35,13 @@ vi.mock("@/server/email", () => ({
 
 const hasTestDatabase = Boolean(process.env.TEST_DATABASE_URL);
 
+/** Le jeton vit dans le fragment (#token=…), jamais dans la query string. */
+function tokenFromResetUrl(resetUrl: string): string | null {
+  const url = new URL(resetUrl);
+  expect(url.searchParams.get("token")).toBeNull();
+  return new URLSearchParams(url.hash.slice(1)).get("token");
+}
+
 /**
  * Ces tests écrivent dans la base TEST_DATABASE_URL (jamais la base de
  * développement). Sans cette variable, ils sont ignorés.
@@ -87,8 +94,7 @@ describe.skipIf(!hasTestDatabase)("réinitialisation du mot de passe (intégrati
     await requestPasswordReset(user.email, ipHash);
 
     expect(mail.sent).toHaveLength(1);
-    const resetUrl = new URL(mail.sent[0]!.resetUrl);
-    const rawToken = resetUrl.searchParams.get("token");
+    const rawToken = tokenFromResetUrl(mail.sent[0]!.resetUrl);
     expect(rawToken).toBeTruthy();
 
     const storedTokens = await db
@@ -145,7 +151,7 @@ describe.skipIf(!hasTestDatabase)("réinitialisation du mot de passe (intégrati
 
     await requestPasswordReset(user.email, ipHash);
     expect(mail.sent).toHaveLength(1);
-    const rawToken = new URL(mail.sent[0]!.resetUrl).searchParams.get("token");
+    const rawToken = tokenFromResetUrl(mail.sent[0]!.resetUrl);
     expect(rawToken).toBeTruthy();
 
     const results = await Promise.allSettled([

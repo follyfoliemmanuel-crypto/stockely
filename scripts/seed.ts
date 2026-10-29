@@ -264,7 +264,7 @@ async function main() {
 
   console.log("Données de démonstration créées.");
   console.log("Comptes de démonstration prêts (identifiants définis dans le seed).");
-  console.log("Mots de passe : définis via SEED_*_PASSWORD (non affichés).");
+  console.log("Les valeurs sensibles proviennent des variables SEED_* et restent masquées.");
 }
 
 main()

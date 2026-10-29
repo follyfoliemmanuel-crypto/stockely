@@ -43,14 +43,10 @@ export function jsonError(
 /** Convertit toute erreur en réponse JSON sûre (aucun détail interne en production). */
 export function toErrorResponse(error: unknown): NextResponse {
   if (error instanceof ApiError) {
-    // Les détails ne servent qu'aux erreurs de validation côté client.
-    // Une erreur serveur ne doit jamais exposer son contexte interne.
-    return jsonError(
-      error.status,
-      error.code,
-      error.message,
-      error.status < 500 ? error.details : undefined,
-    );
+    // Seuls les messages contrôlés par l'application sont exposés. Le champ
+    // `details` reste interne : il peut contenir un contexte base de données
+    // ou une valeur brute reçue du client, même sur une erreur 4xx.
+    return jsonError(error.status, error.code, error.message);
   }
 
   if (error instanceof ZodError) {
@@ -234,6 +230,36 @@ export function assertUuidParam(value: string, label = "Identifiant"): string {
 /** Tronque une recherche libre pour éviter les motifs ILIKE démesurés. */
 export function boundedQuery(value: string | null | undefined, max = MAX_QUERY_LENGTH): string {
   return (value ?? "").trim().slice(0, max);
+}
+
+const MAX_QUERY_PARAM_LENGTH = 4_096;
+const MAX_QUERY_PARAM_COUNT = 32;
+
+/**
+ * Lit la query string et la valide avec un schéma Zod explicite.
+ * Aucun paramètre brut n'atteint la logique métier : la première valeur de
+ * chaque clé est conservée, les clés inconnues sont ignorées par Zod.
+ */
+export function readQuery<T>(request: Request, schema: ZodType<T>): T {
+  const url = new URL(request.url);
+  // Objet sans prototype : une clé comme `__proto__` ne peut pas polluer
+  // l'objet transmis au schéma.
+  const raw = Object.create(null) as Record<string, string>;
+  let count = 0;
+
+  for (const [key, value] of url.searchParams) {
+    count += 1;
+    if (
+      count > MAX_QUERY_PARAM_COUNT ||
+      key.length > 64 ||
+      value.length > MAX_QUERY_PARAM_LENGTH
+    ) {
+      throw new ApiError(400, "invalid_query", "Paramètres de requête invalides.");
+    }
+    if (!Object.hasOwn(raw, key)) raw[key] = value;
+  }
+
+  return schema.parse(raw);
 }
 
 /** Hachage HMAC des adresses IP : on ne stocke jamais l'IP en clair. */

@@ -8,9 +8,13 @@ import {
   boundedQuery,
   getClientIp,
   readJson,
+  readQuery,
   toErrorResponse,
 } from "@/server/http";
-import { googleCallbackSchema } from "@/server/validation/auth";
+import {
+  googleCallbackQuerySchema,
+  googleCallbackSchema,
+} from "@/server/validation/auth";
 
 const VALID_UUID = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
 
@@ -43,6 +47,41 @@ describe("validation des entrées HTTP", () => {
     expect(boundedQuery("x".repeat(500))).toHaveLength(100);
     expect(boundedQuery("x".repeat(500), 8)).toHaveLength(8);
     expect(boundedQuery(null)).toBe("");
+  });
+
+  it("valide la query string avec un schéma explicite", () => {
+    const request = new Request(
+      "http://localhost/api/test?q=clavier&page=2&q=ignor%C3%A9",
+    );
+    expect(
+      readQuery(
+        request,
+        z.object({
+          q: z.string().max(100).optional(),
+          page: z.coerce.number().int().min(1).catch(1),
+        }),
+      ),
+    ).toEqual({ q: "clavier", page: 2 });
+
+    expect(() =>
+      readQuery(new Request("http://localhost/api/test?q=ok"), z.object({})),
+    ).not.toThrow();
+
+    expect(
+      readQuery(
+        new Request("http://localhost/api/test?error=access_denied"),
+        googleCallbackQuerySchema,
+      ),
+    ).toEqual({ error: "access_denied" });
+  });
+
+  it("refuse une query string démesurée", () => {
+    const request = new Request(
+      `http://localhost/api/test?q=${"x".repeat(5_000)}`,
+    );
+    expect(() => readQuery(request, z.object({ q: z.string() }))).toThrowError(
+      /Paramètres de requête invalides/,
+    );
   });
 
   it("refuse un corps non JSON avec 415", async () => {
@@ -102,6 +141,21 @@ describe("validation des entrées HTTP", () => {
 
     expect(response.status).toBe(500);
     expect(body.error.code).toBe("internal_error");
+    expect(body.error.details).toBeUndefined();
+  });
+
+  it("ne divulgue pas non plus les détails internes d'une erreur 4xx", async () => {
+    const response = toErrorResponse(
+      new ApiError(422, "invalid_category", "Catégorie introuvable.", {
+        query: "select * from products",
+      }),
+    );
+    const body = (await response.json()) as {
+      error: { code: string; details?: unknown };
+    };
+
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe("invalid_category");
     expect(body.error.details).toBeUndefined();
   });
 

@@ -41,6 +41,12 @@ export const categorySchema = z.object({
   description: optionalText(500),
 });
 
+/** Recherche produit par code-barres ou par texte libre. */
+export const productSearchQuerySchema = z.object({
+  barcode: z.string().max(64).optional().catch(undefined),
+  q: z.string().max(100).optional().catch(undefined),
+});
+
 export type ProductCreateInput = z.infer<typeof productCreateSchema>;
 export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
 export type CategoryInput = z.infer<typeof categorySchema>;

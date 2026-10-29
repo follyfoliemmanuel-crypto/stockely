@@ -13,11 +13,15 @@ import {
 import { applySessionCookies } from "@/server/auth/session";
 import {
   getRequestIpHash,
+  readQuery,
   route,
   safeCompare,
 } from "@/server/http";
 import { loginWithGoogle } from "@/server/services/oauth";
-import { googleCallbackSchema } from "@/server/validation/auth";
+import {
+  googleCallbackQuerySchema,
+  googleCallbackSchema,
+} from "@/server/validation/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -42,15 +46,20 @@ function redirectToLogin(base: string, code: string): NextResponse {
 
 export const GET = route(async (request: Request) => {
   const base = getEnv().APP_URL;
-  const url = new URL(request.url);
+
+  let query: ReturnType<typeof googleCallbackQuerySchema.parse>;
+  try {
+    query = readQuery(request, googleCallbackQuerySchema);
+  } catch {
+    return redirectToLogin(base, "google_failed");
+  }
 
   // Google peut renvoyer une erreur sans code ni state : on ne fait
   // confiance à aucun de ces paramètres, on mappe vers un message fixe.
-  const errorParam = url.searchParams.get("error");
-  if (errorParam !== null) {
+  if (query.error !== undefined) {
     return redirectToLogin(
       base,
-      errorParam.slice(0, 100) === "access_denied" ? "google_cancelled" : "google_failed",
+      query.error === "access_denied" ? "google_cancelled" : "google_failed",
     );
   }
 
@@ -58,8 +67,8 @@ export const GET = route(async (request: Request) => {
   if (!config) return redirectToLogin(base, "google_not_configured");
 
   const parsed = googleCallbackSchema.safeParse({
-    state: url.searchParams.get("state") ?? undefined,
-    code: url.searchParams.get("code") ?? undefined,
+    state: query.state,
+    code: query.code,
   });
   if (!parsed.success) return redirectToLogin(base, "google_failed");
 

@@ -1,23 +1,65 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field, FormError, TextInput } from "@/components/ui/field";
 import { ApiClientError, apiFetch } from "@/lib/api-client";
 
-export function ResetPasswordForm({ token }: { token: string }) {
+const MIN_TOKEN_LENGTH = 20;
+const MAX_TOKEN_LENGTH = 512;
+
+/**
+ * Lit le jeton depuis le fragment d'URL, puis l'efface aussitôt.
+ * Le fragment n'est jamais transmis au serveur : ni journaux, ni Referer.
+ */
+function readTokenFromHash(): string | null {
+  const hash = window.location.hash.startsWith("#")
+    ? window.location.hash.slice(1)
+    : window.location.hash;
+  if (!hash) return null;
+
+  const token = new URLSearchParams(hash).get("token");
+  if (!token) return null;
+  if (token.length < MIN_TOKEN_LENGTH || token.length > MAX_TOKEN_LENGTH) {
+    return null;
+  }
+  return token;
+}
+
+function clearHash(): void {
+  window.history.replaceState(
+    null,
+    "",
+    `${window.location.pathname}${window.location.search}`,
+  );
+}
+
+export function ResetPasswordForm() {
+  const [token, setToken] = useState<string | null>(null);
+  const [tokenReady, setTokenReady] = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const value = readTokenFromHash();
+    setToken(value);
+    setTokenReady(true);
+    if (value) clearHash();
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
+    if (!token) {
+      setError("Ce lien de réinitialisation n'est plus valide.");
+      return;
+    }
     if (password.length < 10) {
       setError("Le mot de passe doit contenir au moins 10 caractères.");
       return;
@@ -42,6 +84,32 @@ export function ResetPasswordForm({ token }: { token: string }) {
       );
       setLoading(false);
     }
+  }
+
+  if (!tokenReady) {
+    return (
+      <p className="text-[0.875rem] leading-6 text-muted" role="status">
+        Vérification du lien…
+      </p>
+    );
+  }
+
+  if (!token) {
+    return (
+      <div>
+        <h1 className="text-2xl font-semibold tracking-[-0.025em]">Lien incomplet</h1>
+        <p className="mt-3 text-[0.875rem] leading-6 text-muted">
+          Ce lien de réinitialisation ne contient pas de jeton valide. Demandez un
+          nouveau lien pour continuer.
+        </p>
+        <Link
+          href="/forgot-password"
+          className="mt-8 inline-flex h-11 items-center justify-center rounded-md bg-primary-dark px-4 text-sm font-medium text-white transition-colors hover:bg-[#166534]"
+        >
+          Demander un nouveau lien
+        </Link>
+      </div>
+    );
   }
 
   if (success) {

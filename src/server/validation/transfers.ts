@@ -82,6 +82,27 @@ export const transferCancelSchema = z.object({
     .max(500, "Le motif ne doit pas dépasser 500 caractères."),
 });
 
+/**
+ * Filtres de la liste des transferts. Les valeurs invalides sont ignorées
+ * plutôt que propagées au service, comme le faisait l'interface historique.
+ */
+export const transferListQuerySchema = z.object({
+  status: z
+    .enum(["prepared", "shipped", "received", "cancelled"])
+    .optional()
+    .catch(undefined),
+  page: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(10_000)
+    .catch(1),
+  fromWarehouseId: z.string().uuid().optional().catch(undefined),
+  toWarehouseId: z.string().uuid().optional().catch(undefined),
+  warehouseId: z.string().uuid().optional().catch(undefined),
+  q: z.string().max(100).optional().catch(undefined),
+});
+
 export type TransferCreateInput = z.infer<typeof transferCreateSchema>;
 export type TransferShipInput = z.infer<typeof transferShipSchema>;
 export type TransferReceiveInput = z.infer<typeof transferReceiveSchema>;
