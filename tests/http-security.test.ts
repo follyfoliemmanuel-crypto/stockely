@@ -14,6 +14,7 @@ import {
 import {
   googleCallbackQuerySchema,
   googleCallbackSchema,
+  resetPasswordSchema,
 } from "@/server/validation/auth";
 
 const VALID_UUID = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
@@ -82,6 +83,29 @@ describe("validation des entrées HTTP", () => {
     expect(() => readQuery(request, z.object({ q: z.string() }))).toThrowError(
       /Paramètres de requête invalides/,
     );
+  });
+
+  it("borne et restreint l'alphabet du jeton de réinitialisation", () => {
+    expect(
+      resetPasswordSchema.safeParse({
+        token: "A".repeat(42) + "_-",
+        password: "mot-de-passe-solide",
+      }).success,
+    ).toBe(true);
+
+    for (const token of [
+      "a".repeat(19),
+      "a".repeat(513),
+      `${"a".repeat(40)}/=%`,
+      `${"a".repeat(40)} espace`,
+    ]) {
+      expect(
+        resetPasswordSchema.safeParse({
+          token,
+          password: "mot-de-passe-solide",
+        }).success,
+      ).toBe(false);
+    }
   });
 
   it("refuse un corps non JSON avec 415", async () => {

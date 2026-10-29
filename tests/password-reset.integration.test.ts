@@ -38,7 +38,9 @@ const hasTestDatabase = Boolean(process.env.TEST_DATABASE_URL);
 /** Le jeton vit dans le fragment (#token=…), jamais dans la query string. */
 function tokenFromResetUrl(resetUrl: string): string | null {
   const url = new URL(resetUrl);
+  expect(url.pathname.endsWith("/reset-password")).toBe(true);
   expect(url.searchParams.get("token")).toBeNull();
+  expect(url.hash.startsWith("#token=")).toBe(true);
   return new URLSearchParams(url.hash.slice(1)).get("token");
 }
 

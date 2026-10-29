@@ -1,39 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field, FormError, TextInput } from "@/components/ui/field";
 import { ApiClientError, apiFetch } from "@/lib/api-client";
-
-const MIN_TOKEN_LENGTH = 20;
-const MAX_TOKEN_LENGTH = 512;
+import { extractResetToken } from "@/lib/reset-token";
 
 /**
- * Lit le jeton depuis le fragment d'URL, puis l'efface aussitôt.
- * Le fragment n'est jamais transmis au serveur : ni journaux, ni Referer.
+ * Lit le jeton depuis l'URL, puis l'efface aussitôt. Les nouveaux liens
+ * utilisent le fragment : il n'est jamais transmis au serveur, ni dans les
+ * journaux, ni dans l'en-tête Referer. La query string reste acceptée le
+ * temps que les anciens e-mails (jetons valables 60 minutes) expirent.
  */
-function readTokenFromHash(): string | null {
-  const hash = window.location.hash.startsWith("#")
-    ? window.location.hash.slice(1)
-    : window.location.hash;
-  if (!hash) return null;
-
-  const token = new URLSearchParams(hash).get("token");
-  if (!token) return null;
-  if (token.length < MIN_TOKEN_LENGTH || token.length > MAX_TOKEN_LENGTH) {
-    return null;
-  }
-  return token;
+function readTokenFromLocation(): string | null {
+  return extractResetToken(window.location.hash, window.location.search);
 }
 
-function clearHash(): void {
-  window.history.replaceState(
-    null,
-    "",
-    `${window.location.pathname}${window.location.search}`,
-  );
+/** Retire le jeton de la barre d'adresse et de l'entrée d'historique. */
+function clearTokenFromUrl(): void {
+  window.history.replaceState(null, "", window.location.pathname);
 }
 
 export function ResetPasswordForm() {
@@ -44,12 +31,18 @@ export function ResetPasswordForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Évite de relire l'URL après l'avoir nettoyée (React StrictMode exécute
+  // les effets deux fois en développement).
+  const tokenRead = useRef(false);
 
   useEffect(() => {
-    const value = readTokenFromHash();
+    if (tokenRead.current) return;
+    tokenRead.current = true;
+
+    const value = readTokenFromLocation();
     setToken(value);
     setTokenReady(true);
-    if (value) clearHash();
+    if (value) clearTokenFromUrl();
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {

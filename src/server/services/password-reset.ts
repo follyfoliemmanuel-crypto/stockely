@@ -88,13 +88,15 @@ export async function requestPasswordReset(
   // Le jeton reste dans le fragment : il n'est jamais envoyé au serveur,
   // donc absent des journaux, des proxys et de l'en-tête Referer. Le
   // formulaire client le lit puis efface immédiatement l'URL.
-  const resetUrl = `${env.APP_URL}/reset-password#token=${encodeURIComponent(token)}`;
+  const appBase = env.APP_URL.endsWith("/") ? env.APP_URL : `${env.APP_URL}/`;
+  const resetUrl = new URL("reset-password", appBase);
+  resetUrl.hash = new URLSearchParams({ token }).toString();
 
   try {
     await sendPasswordResetEmail({
       to: user.email,
       name: user.name,
-      resetUrl,
+      resetUrl: resetUrl.toString(),
       expiresInMinutes: TOKEN_LIFETIME_MINUTES,
     });
   } catch {

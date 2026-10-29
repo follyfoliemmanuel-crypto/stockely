@@ -6,6 +6,8 @@ const isProduction = process.env.NODE_ENV === "production";
  * En-têtes de sécurité appliqués à toutes les réponses.
  * La CSP reste compatible avec Next.js : les scripts inline sont nécessaires
  * au bootstrap, mais `unsafe-eval` est réservé au serveur de développement.
+ * Les clés ci-dessous sont des noms d'en-têtes HTTP publics : aucun secret
+ * ne doit être ajouté dans ce fichier (voir `src/lib/env.ts`).
  */
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },

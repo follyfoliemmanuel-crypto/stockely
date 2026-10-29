@@ -45,7 +45,11 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(20, "Jeton invalide.").max(512, "Jeton invalide."),
+  token: z
+    .string()
+    .min(20, "Jeton invalide.")
+    .max(512, "Jeton invalide.")
+    .regex(/^[A-Za-z0-9_-]+$/, "Jeton invalide."),
   password,
 });
 
