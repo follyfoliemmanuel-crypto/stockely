@@ -8,10 +8,9 @@ build/
 dist/
 
 # environnement — ne jamais committer de secrets
-.env
-.env.local
-.env.*.local
-.env.production
+# Toutes les variantes (.env.local, .env.development, .env.test,
+# .env.production, .env.*.local) sont ignorées ; seul l'exemple est suivi.
+.env*
 !.env.example
 
 # tests
