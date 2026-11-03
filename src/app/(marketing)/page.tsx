@@ -1,10 +1,12 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 import { PublicFooter } from "@/components/marketing/public-footer";
 import { PublicHeader } from "@/components/marketing/public-header";
 import { LogoLockup } from "@/components/brand/logo";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { SITE_URL } from "@/lib/site";
 
 function CheckIcon({ className }: { className?: string }) {
   return (
@@ -38,6 +40,10 @@ function ArrowIcon() {
     </svg>
   );
 }
+
+export const metadata: Metadata = {
+  alternates: { canonical: `${SITE_URL}/` },
+};
 
 const steps = [
   {

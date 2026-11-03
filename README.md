@@ -200,7 +200,7 @@ npm install
 ```env
 DATABASE_URL="postgresql://user:motdepasse@ep-xxx-pooler.eu-central-1.aws.neon.tech/stockely?sslmode=require"
 APP_SECRET="une-chaine-aleatoire-de-64-caracteres"
-APP_URL="http://localhost:3000"
+APP_URL="https://stockely.vercel.app"
 NODE_ENV="development"
 DEFAULT_CURRENCY="XOF"
 DEFAULT_TIMEZONE="Africa/Lome"
@@ -297,8 +297,9 @@ sans écraser son mot de passe.
 npm run dev
 ```
 
-- Application : http://localhost:3000
-- Santé : http://localhost:3000/api/health
+- Local : http://localhost:3000
+- Production : https://stockely.vercel.app
+- Santé : https://stockely.vercel.app/api/health
 
 ### 7. Données de démonstration (développement uniquement)
 
@@ -344,16 +345,21 @@ boutique existante.
 
 1. Dans [Google Cloud Console](https://console.cloud.google.com/apis/credentials),
    créer un identifiant **OAuth client ID** de type *Application Web*.
-2. Ajouter l'URI de redirection autorisé :
-   `http://localhost:3000/api/auth/google/callback` en développement, puis
-   `https://votre-domaine/api/auth/google/callback` en production.
+2. Ajouter les URI de redirection autorisés :
+   `https://stockely.vercel.app/api/auth/google/callback` (production) et,
+   si nécessaire, `http://localhost:3000/api/auth/google/callback` (développement
+   uniquement).
 3. Renseigner dans `.env` :
 
 ```env
 GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
-# GOOGLE_REDIRECT_URI="https://votre-domaine/api/auth/google/callback"
+GOOGLE_REDIRECT_URI="https://stockely.vercel.app/api/auth/google/callback"
 ```
+
+4. Sur Vercel, définir `APP_URL=https://stockely.vercel.app` et
+   `GOOGLE_REDIRECT_URI=https://stockely.vercel.app/api/auth/google/callback`
+   dans *Settings → Environment Variables*, puis redéployer.
 
 Fonctionnement :
 
