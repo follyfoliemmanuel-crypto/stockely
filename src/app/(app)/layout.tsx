@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { Logo } from "@/components/brand/logo";
+import { AiAssistant } from "@/components/app/ai-assistant";
 import { LogoutButton } from "@/components/app/logout-button";
 import { MobileMenu } from "@/components/app/mobile-menu";
 import { NavLinks } from "@/components/app/nav-links";
@@ -13,6 +14,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/metrics";
 import { getAuthContext } from "@/server/auth/context";
 import { getRequestWarehouseId } from "@/server/auth/warehouse";
+import { isAiConfigured } from "@/server/ai/client";
 import { getDb } from "@/server/db";
 import { memberships, shops } from "@/server/db/schema";
 import { roleLabel, type Permission } from "@/server/permissions";
@@ -172,6 +174,8 @@ export default async function AppLayout({
           {children}
         </main>
       </div>
+
+      <AiAssistant shopName={context.shop.name} enabled={isAiConfigured()} />
     </div>
   );
 }

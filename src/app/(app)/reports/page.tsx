@@ -2,8 +2,10 @@ import Link from "next/link";
 
 import { PageHeader, SectionCard, EmptyState, StatusPill } from "@/components/ui/page";
 import { buttonClasses } from "@/components/ui/button";
+import { AiSummary } from "@/components/reports/ai-summary";
 import { PrintButton } from "@/components/sales/print-button";
 import { requirePage } from "@/server/auth/page";
+import { isAiConfigured } from "@/server/ai/client";
 import { getSalesReport } from "@/server/services/reports";
 import { formatDate, formatInteger, formatMoney } from "@/lib/money";
 import {
@@ -54,6 +56,7 @@ export default async function ReportsPage({
   );
   const presets = reportPresets();
   const canExport = context.permissions.has("reports.export");
+  const aiEnabled = isAiConfigured();
   const currency = context.shop.currency;
   const series = buildDailySeries(range.from, range.to, report.daily);
   const maxRevenue = Math.max(1, ...series.map((item) => item.revenue));
@@ -204,6 +207,8 @@ export default async function ReportsPage({
           </div>
         ))}
       </div>
+
+      {aiEnabled && <AiSummary from={range.from} to={range.to} />}
 
       <SectionCard
         title="Évolution du chiffre d'affaires"

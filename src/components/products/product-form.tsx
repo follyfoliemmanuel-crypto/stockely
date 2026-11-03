@@ -12,6 +12,7 @@ import {
   TextInput,
   Textarea,
 } from "@/components/ui/field";
+import { AiDescriptionButton } from "@/components/products/ai-description";
 import { ApiClientError, apiFetch } from "@/lib/api-client";
 import { centsToInput, parseMoneyToCents } from "@/lib/money";
 
@@ -35,12 +36,14 @@ export function ProductForm({
   categories,
   suppliers,
   currency,
+  aiEnabled,
 }: {
   mode: "create" | "edit";
   product?: ProductFormProduct;
   categories: Array<{ id: string; name: string }>;
   suppliers: Array<{ id: string; name: string }>;
   currency: string;
+  aiEnabled: boolean;
 }) {
   const router = useRouter();
   const [name, setName] = useState(product?.name ?? "");
@@ -226,6 +229,25 @@ export function ProductForm({
                 maxLength={2000}
                 placeholder="Conditionnement, variété, notes internes…"
               />
+              {aiEnabled && (
+                <AiDescriptionButton
+                  name={name}
+                  categoryName={
+                    categories.find((category) => category.id === categoryId)?.name ??
+                    null
+                  }
+                  priceCents={parseMoneyToCents(price)}
+                  onDescription={(suggestion) => {
+                    if (
+                      description.trim() &&
+                      !window.confirm("Remplacer la description actuelle ?")
+                    ) {
+                      return;
+                    }
+                    setDescription(suggestion);
+                  }}
+                />
+              )}
             </Field>
           </div>
         </section>

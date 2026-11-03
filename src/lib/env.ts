@@ -35,6 +35,18 @@ const envSchema = z.object({
   /* Envoi d'e-mails — facultatif tant que non configuré. */
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
+
+  /* Assistant IA via IteraCompute (compatible OpenAI) — facultatif. */
+  ITERACOMPUTE_API_KEY: z.string().min(1).optional(),
+  ITERACOMPUTE_BASE_URL: z
+    .string()
+    .url("ITERACOMPUTE_BASE_URL doit être une URL valide")
+    .default("https://api.iteracompute.com/v1")
+    .transform((value) => value.replace(/\/+$/, "")),
+  ITERACOMPUTE_MODEL: z
+    .string()
+    .min(1)
+    .default("qwen/qwen3.8-27b"),
 })
   .superRefine((value, ctx) => {
     // En production, l'application doit être servie en HTTPS : sans cela les
@@ -76,6 +88,9 @@ export function getEnv(): Env {
     GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || undefined,
     RESEND_API_KEY: process.env.RESEND_API_KEY || undefined,
     EMAIL_FROM: process.env.EMAIL_FROM || undefined,
+    ITERACOMPUTE_API_KEY: process.env.ITERACOMPUTE_API_KEY || undefined,
+    ITERACOMPUTE_BASE_URL: process.env.ITERACOMPUTE_BASE_URL || undefined,
+    ITERACOMPUTE_MODEL: process.env.ITERACOMPUTE_MODEL || undefined,
   });
 
   if (!parsed.success) {

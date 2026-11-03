@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/ui/page";
 import { ProductForm } from "@/components/products/product-form";
 import { buttonClasses } from "@/components/ui/button";
 import { requirePage } from "@/server/auth/page";
+import { isAiConfigured } from "@/server/ai/client";
 import {
   getProduct,
   listCategoriesWithCounts,
@@ -69,6 +70,7 @@ export default async function EditProductPage({
         }))}
         suppliers={suppliers}
         currency={context.shop.currency}
+        aiEnabled={isAiConfigured()}
       />
     </div>
   );

@@ -12,13 +12,14 @@ export const dynamic = "force-dynamic";
  */
 export const GET = route(async () => {
   let config: "ok" | "incomplete" = "ok";
-  let features = { google: false, email: false };
+  let features = { google: false, email: false, ai: false };
 
   try {
     const env = getEnv();
     features = {
       google: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
       email: Boolean(env.RESEND_API_KEY && env.EMAIL_FROM),
+      ai: Boolean(env.ITERACOMPUTE_API_KEY),
     };
   } catch {
     config = "incomplete";

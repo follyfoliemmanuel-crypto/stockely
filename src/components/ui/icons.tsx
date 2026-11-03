@@ -14,7 +14,9 @@ export type IconName =
   | "warehouse"
   | "package"
   | "trend-up"
-  | "trend-down";
+  | "trend-down"
+  | "sparkles"
+  | "send";
 
 const paths: Record<IconName, ReactNode> = {
   wallet: (
@@ -82,6 +84,18 @@ const paths: Record<IconName, ReactNode> = {
   ),
   "trend-up": <path d="m4 13 4-4 3 3 5-5m0 0h-4m4 0v4" />,
   "trend-down": <path d="m4 7 4 4 3-3 5 5m0 0h-4m4 0v-4" />,
+  sparkles: (
+    <>
+      <path d="M9.5 3.2 11 7l3.8 1.5L11 10 9.5 13.8 8 10 4.2 8.5 8 7z" />
+      <path d="m15.4 12.2.7 1.7 1.7.7-1.7.7-.7 1.7-.7-1.7-1.7-.7 1.7-.7z" />
+    </>
+  ),
+  send: (
+    <>
+      <path d="M3.5 10 16.5 4l-3 12-4-4.5z" />
+      <path d="m9.5 11.5 7-7.5" />
+    </>
+  ),
 };
 
 export function Icon({

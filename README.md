@@ -95,6 +95,24 @@ journal d'audit. Architecture multi-boutiques avec isolation stricte des donnée
   page dédiée, sans dépendance PDF côté serveur.
 - Chaque export est tracé dans le journal d'audit.
 
+### Assistant IA
+
+- **Assistant flottant** disponible sur toutes les pages de l'application :
+  questions en langage naturel sur le stock, les ventes, la marge et les
+  réapprovisionnements.
+- **Synthèse IA des rapports** : bouton « Résumé IA » sur la page Rapports,
+  limité à la période affichée.
+- **Aide à la saisie produit** : proposition de description depuis le nom et la
+  catégorie, modifiable avant enregistrement.
+- Contexte reconstruit côté serveur à partir de la **boutique active** : le
+  navigateur ne peut ni choisir la boutique, ni injecter d'instructions
+  système. Aucune donnée nominative client n'est envoyée au modèle.
+- Clé API **exclusivement serveur**, limitation de débit persistée (5 requêtes
+  par minute et 30 par heure et par utilisateur), gestion des erreurs du
+  fournisseur (`429`, `503`) sans fuite de détail interne.
+- Sans `ITERACOMPUTE_API_KEY`, les routes `/api/ai/*` répondent
+  `503 ai_not_configured` : aucun résultat n'est simulé.
+
 ### Journal d'audit
 
 - Historique en ajout seul des connexions, ventes, annulations, mouvements,
@@ -134,6 +152,7 @@ journal d'audit. Architecture multi-boutiques avec isolation stricte des donnée
 - **Argon2id** (`@node-rs/argon2`) pour les mots de passe
 - **Zod** pour la validation des entrées
 - **Vitest** pour les tests unitaires et d'intégration
+- **IteraCompute** (API compatible OpenAI) pour l'assistant IA
 
 ### Identité visuelle
 
@@ -156,10 +175,11 @@ src/
     (auth)/               connexion, inscription, mot de passe oublié/reset
     (app)/                espace privé : dashboard, produits, stock, ventes,
                           clients, fournisseurs, rapports, audit
-    api/                  routes API (auth, catalogue, stock, ventes, exports)
+    api/                  routes API (auth, catalogue, stock, ventes, exports, IA)
   components/             UI réutilisable, navigation, caisse, formulaires
   lib/                    env, monnaie, dates, libellés, client API
   server/
+    ai/                   client IteraCompute, contexte boutique, prompts
     auth/                 sessions, CSRF, rate-limit, Argon2id, OAuth Google
     db/                   schéma Drizzle, pool PostgreSQL, erreurs
     services/             logique métier : produits, stock, ventes, rapports…
@@ -212,6 +232,9 @@ GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 RESEND_API_KEY=""
 EMAIL_FROM=""
+# Facultatif — assistant IA (voir section dédiée)
+ITERACOMPUTE_API_KEY=""
+ITERACOMPUTE_MODEL="qwen/qwen3.8-27b"
 ```
 
 Générer un `APP_SECRET` solide :
@@ -391,6 +414,40 @@ EMAIL_FROM="Stockely <no-reply@votre-domaine.com>"
   `503 email_not_configured` : aucun e-mail n'est simulé et aucun jeton n'est
   journalisé.
 
+## Assistant IA (IteraCompute)
+
+L'assistant utilise l'API d'[IteraCompute](https://iteracompute.com), compatible
+avec le format OpenAI. Le modèle gratuit `qwen/qwen3.8-27b` est utilisé par
+défaut (30 millions de jetons par mois, offre promotionnelle jusqu'au
+24 novembre 2026).
+
+```env
+ITERACOMPUTE_API_KEY="sk-..."
+ITERACOMPUTE_BASE_URL="https://api.iteracompute.com/v1"
+ITERACOMPUTE_MODEL="qwen/qwen3.8-27b"
+```
+
+- La clé est lue **uniquement côté serveur** par `src/server/ai/client.ts`.
+  Elle n'est jamais préfixée `NEXT_PUBLIC_`, jamais renvoyée au navigateur et
+  jamais écrite dans un journal.
+- Créer la clé sur la page **API Keys** d'IteraCompute, puis la déclarer dans
+  `.env` en local et dans les variables d'environnement Vercel. La révoquer
+  immédiatement si elle a été partagée.
+- Routes protégées par session, contrôle d'origine, jeton CSRF, validation Zod
+  et permission :
+  - `POST /api/ai/chat` — assistant conversationnel (tout membre authentifié) ;
+  - `POST /api/ai/summary` — synthèse d'une période (`reports.read`) ;
+  - `POST /api/ai/product-description` — aide à la saisie (`products.write`).
+- Le contexte est reconstruit à chaque appel depuis la boutique active. Les
+  données nominatives (clients, e-mails, téléphones) ne sont pas transmises.
+- Limites : 5 requêtes par minute et 30 par heure et par utilisateur. Les
+  erreurs `429` et `503` du fournisseur sont traduites en messages sobres.
+- Coût : le modèle gratuit renvoie `cost: 0`. Un modèle payant peut être choisi
+  via `ITERACOMPUTE_MODEL`, avec les tarifs du fournisseur.
+
+> L'assistant ne remplace pas un contrôle humain : les montants et
+> recommandations générés doivent être vérifiés avant toute décision.
+
 ---
 
 ## Scripts
@@ -536,9 +593,9 @@ sauvegarde et sur une base identifiée.
 ### Surveillance
 
 - `/api/health` renvoie `200` avec
-  `{"status":"ok","db":"ok","config":"ok","features":{"google":false,"email":false}}`.
-  Les indicateurs `google` et `email` signalent seulement si les intégrations
-  sont configurées, jamais de secret.
+  `{"status":"ok","db":"ok","config":"ok","features":{"google":false,"email":false,"ai":false}}`.
+  Les indicateurs `google`, `email` et `ai` signalent seulement si les
+  intégrations sont configurées, jamais de secret.
 - Configurer une alerte sur les réponses `503` et sur la latence de la base.
 - Surveiller les tentatives de connexion échouées (`login_attempts`).
 
@@ -550,7 +607,9 @@ sauvegarde et sur une base identifiée.
 2. Variables d'environnement (Production et Preview) :
    `DATABASE_URL`, `APP_SECRET`, `APP_URL`, `NODE_ENV=production`.
    Ajouter si utilisés : `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
-   `GOOGLE_REDIRECT_URI`, `RESEND_API_KEY`, `EMAIL_FROM`.
+   `GOOGLE_REDIRECT_URI`, `RESEND_API_KEY`, `EMAIL_FROM`,
+   `ITERACOMPUTE_API_KEY`, `ITERACOMPUTE_MODEL` (et éventuellement
+   `ITERACOMPUTE_BASE_URL`).
 3. **Créer une branche Neon de sauvegarde**, puis appliquer les migrations
    **depuis votre machine** avec le runbook
    [`docs/PRODUCTION_MIGRATION.md`](docs/PRODUCTION_MIGRATION.md) :
@@ -649,6 +708,11 @@ la base de test reste jetable.
   ajoutés ; la restriction par entrepôt fonctionne avec les rôles actuels.
 - Pas de moteur de TVA : les prix sont saisis TTC selon la configuration de la
   boutique.
-- Le rate-limit persistant couvre la connexion et la réinitialisation ; les
-  autres routes s'appuient sur l'authentification, le CSRF et les permissions.
+- Le rate-limit persistant couvre la connexion, la réinitialisation du mot de
+  passe et l'assistant IA ; les autres routes s'appuient sur l'authentification,
+  le CSRF et les permissions.
+- Assistant IA : dépend d'un service externe. Sans clé, les routes répondent
+  `503` ; en cas de forte demande du modèle gratuit, une attente ou un `429`
+  peut survenir. Le support client public n'est pas branché sur l'IA afin
+  d'éviter une consommation abusive non authentifiée.
 - Pas de mode hors ligne : la caisse nécessite une connexion au serveur.

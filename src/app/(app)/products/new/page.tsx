@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui/page";
 import { ProductForm } from "@/components/products/product-form";
 import { buttonClasses } from "@/components/ui/button";
 import { requirePage } from "@/server/auth/page";
+import { isAiConfigured } from "@/server/ai/client";
 import { listCategoriesWithCounts } from "@/server/services/products";
 import { listSupplierOptions } from "@/server/services/suppliers";
 
@@ -41,6 +42,7 @@ export default async function NewProductPage() {
         }))}
         suppliers={suppliers}
         currency={context.shop.currency}
+        aiEnabled={isAiConfigured()}
       />
     </div>
   );
