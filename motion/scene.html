@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Stockely — Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f4ed; --surface:#fafaf5; --line:#e5e5da; --line2:#d0d2c4;
+    --ink:#171b16; --muted:#6c7267;
+    --green:#2e7d5b; --green-d:#1f5c43; --green-soft:#e3f1e8;
+    --butter:#e9d66b; --butter-d:#d8c24a; --butter-soft:#fbf5ce;
+    --red:#c4553f; --red-soft:#fbe9e4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:var(--paper)}
+  #stage{
+    position:relative;width:1920px;height:1080px;overflow:hidden;
+    background:var(--paper);color:var(--ink);
+    font-family:Manrope,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
+  }
+  .mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+  .k{
+    position:absolute;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+    font-size:15px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);
+    white-space:nowrap;
+  }
+  .scene{position:absolute;inset:0;z-index:12}
+  #s3{z-index:30}
+  #s4,#s5{z-index:40}
+
+  /* Trame papier */
+  #grid{
+    position:absolute;inset:-40px;
+    background-image:
+      linear-gradient(to right, rgba(208,210,196,.45) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(208,210,196,.45) 1px, transparent 1px);
+    background-size:40px 40px;background-position:0 0;
+    opacity:0;
+  }
+  #vig{
+    position:absolute;inset:0;
+    background:radial-gradient(120% 90% at 50% 45%, rgba(244,244,237,0) 40%, rgba(244,244,237,.85) 100%);
+  }
+
+  /* --- Chrome --- */
+  #chrome{position:absolute;inset:0;color:#171b16}
+  .tick{position:absolute;width:26px;height:26px;border:0 solid currentColor;opacity:.5}
+  .tick.tl{left:44px;top:44px;border-left-width:1.5px;border-top-width:1.5px}
+  .tick.tr{right:44px;top:44px;border-right-width:1.5px;border-top-width:1.5px}
+  .tick.bl{left:44px;bottom:44px;border-left-width:1.5px;border-bottom-width:1.5px}
+  .tick.br{right:44px;bottom:44px;border-right-width:1.5px;border-bottom-width:1.5px}
+  #chr-brand{position:absolute;left:96px;top:56px;font-family:"IBM Plex Mono",monospace;
+    font-size:14px;letter-spacing:.3em;text-transform:uppercase;font-weight:600}
+  #chr-scene{position:absolute;right:96px;top:56px;font-family:"IBM Plex Mono",monospace;
+    font-size:14px;letter-spacing:.3em;text-transform:uppercase;opacity:.55}
+  #chr-foot{position:absolute;left:96px;bottom:52px;font-family:"IBM Plex Mono",monospace;
+    font-size:12px;letter-spacing:.26em;text-transform:uppercase;opacity:.5}
+  #chr-fps{position:absolute;right:96px;bottom:52px;font-family:"IBM Plex Mono",monospace;
+    font-size:12px;letter-spacing:.26em;text-transform:uppercase;opacity:.5}
+  #prog{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--green);z-index:80}
+
+  /* --- Scene 1 --- */
+  #word{position:absolute;left:88px;top:392px;display:flex;font-weight:800;font-size:206px;
+    line-height:1;letter-spacing:-.055em}
+  .lt{display:block;overflow:hidden;padding:.02em 0 .12em}
+  .ltr{display:block;transform:translateY(115%);will-change:transform}
+  .ltr.g{color:var(--green)}
+  #s1rule{position:absolute;left:96px;top:700px;height:1.5px;width:1728px;background:var(--line2);
+    transform-origin:left center;transform:scaleX(0)}
+  #cap1{left:96px;top:734px;letter-spacing:.3em;font-size:17px;color:var(--muted)}
+  #swatch{position:absolute;left:1540px;top:392px;display:flex;gap:0}
+  .sw{width:78px;height:78px}
+  #s1side{position:absolute;right:96px;top:520px;text-align:right;font-family:"IBM Plex Mono",monospace;
+    font-size:13px;line-height:2.1;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+  /* --- Scene 2 --- */
+  .ttl{position:absolute;left:96px;top:212px;font-weight:800;font-size:70px;line-height:1.04;
+    letter-spacing:-.042em;color:var(--ink)}
+  .ttl .ln{display:block;overflow:hidden;padding-bottom:.08em}
+  .ttl .ln>span{display:block;transform:translateY(112%)}
+  .ttl .g{color:var(--green)}
+  .chip{
+    position:absolute;width:412px;height:88px;border-radius:14px;
+    background:var(--surface);border:1px solid var(--line);
+    box-shadow:0 1px 2px rgba(23,27,22,.04), 0 18px 40px -32px rgba(23,27,22,.45);
+    display:flex;align-items:center;padding:0 20px;gap:14px;
+  }
+  .chip .sku{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+  .chip .nm{font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .chip .qt{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+    font-size:20px;font-weight:500}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .dot.ok{background:var(--green)}
+  .dot.low{background:var(--butter-d)}
+  .dot.out{background:var(--red)}
+  #tagrupt{position:absolute;font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.2em;
+    text-transform:uppercase;color:#fff;background:var(--red);padding:7px 14px;border-radius:999px;
+    opacity:0;transform:scale(.8)}
+  #s2line{position:absolute;left:96px;top:848px;height:2px;width:1728px;background:var(--green);
+    transform-origin:left center;transform:scaleX(0)}
+
+  /* --- Scene 3 (dark) --- */
+  #wipe{position:absolute;inset:0;background:var(--ink);z-index:20;
+    clip-path:inset(100% 0 0 0)}
+  #s3{color:#f4f4ed;z-index:30}
+  .darkline{background:rgba(244,244,237,.14)}
+  #stat1{position:absolute;left:96px;top:330px;font-weight:800;font-size:168px;letter-spacing:-.05em;
+    line-height:1;font-variant-numeric:tabular-nums}
+  #stat1lab{position:absolute;left:100px;top:520px;font-family:"IBM Plex Mono",monospace;font-size:14px;
+    letter-spacing:.26em;text-transform:uppercase;color:rgba(244,244,237,.55)}
+  #stat2{position:absolute;left:100px;top:660px;font-weight:700;font-size:64px;letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums}
+  #stat2lab{position:absolute;left:100px;top:748px;font-family:"IBM Plex Mono",monospace;font-size:13px;
+    letter-spacing:.26em;text-transform:uppercase;color:rgba(244,244,237,.45)}
+  .hbar{position:absolute;left:100px;top:820px;width:1.5px;background:rgba(244,244,237,.16);height:64px}
+  #s3meta{position:absolute;left:100px;top:840px;font-family:"IBM Plex Mono",monospace;font-size:13px;
+    letter-spacing:.22em;text-transform:uppercase;color:rgba(244,244,237,.4)}
+  #tblhead{position:absolute;left:760px;top:352px;right:96px;display:flex;font-family:"IBM Plex Mono",monospace;
+    font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:rgba(244,244,237,.42);
+    padding-bottom:14px;border-bottom:1px solid rgba(244,244,237,.14)}
+  .trow{position:absolute;left:760px;right:96px;height:66px;display:flex;align-items:center;
+    font-size:18px;border-bottom:1px solid rgba(244,244,237,.08);opacity:0}
+  .trow .c1{width:190px;font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.12em;color:rgba(244,244,237,.5)}
+  .trow .c2{width:400px;font-weight:500}
+  .trow .c3{width:170px;font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.16em;color:rgba(244,244,237,.4)}
+  .trow .bar{position:relative;width:260px;height:6px;border-radius:99px;background:rgba(244,244,237,.1);overflow:hidden}
+  .trow .bar i{position:absolute;inset:0;border-radius:99px;background:var(--green);transform-origin:left;transform:scaleX(0)}
+  .trow .c5{width:120px;text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:17px}
+  .trow .c6{width:120px;text-align:right;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:rgba(244,244,237,.45)}
+  .hl{position:absolute;left:744px;right:96px;height:66px;border-radius:10px;
+    background:rgba(233,214,107,.12);border-left:3px solid var(--butter);opacity:0;z-index:-1}
+  #s3note{position:absolute;right:96px;top:1000px;font-family:"IBM Plex Mono",monospace;font-size:12px;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--butter);opacity:0}
+
+  /* --- Scene 4 --- */
+  #h4{position:absolute;left:96px;top:250px;font-weight:800;font-size:88px;letter-spacing:-.045em;line-height:1.02}
+  #h4 .g{color:var(--green)}
+  #flow{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:visible}
+  .node{position:absolute;width:120px;height:120px;border-radius:30px;background:var(--surface);
+    border:1.5px solid var(--line2);display:flex;align-items:center;justify-content:center;
+    font-family:"IBM Plex Mono",monospace;font-size:15px;letter-spacing:.2em;color:var(--muted)}
+  .nlab{position:absolute;font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--muted);transform:translateX(-50%)}
+  .pill{position:absolute;font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:500;
+    padding:6px 12px;border-radius:999px;white-space:nowrap}
+  .pill.in{background:var(--green-soft);color:var(--green-d)}
+  .pill.out{background:var(--red-soft);color:var(--red)}
+  #stamp{position:absolute;padding:10px 26px;border:2.5px solid var(--green);border-radius:8px;
+    color:var(--green);font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:26px;
+    letter-spacing:.34em;text-transform:uppercase;opacity:0;box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 4.5px var(--green)}
+
+  /* --- Scene 5 --- */
+  #lock{position:absolute;left:0;right:0;top:352px;display:flex;align-items:center;justify-content:center;gap:44px}
+  #mark{width:174px;height:174px;border-radius:40px;box-shadow:0 30px 60px -30px rgba(31,92,67,.55)}
+  #wordmark{font-weight:800;font-size:152px;letter-spacing:-.045em;line-height:1}
+  #wordmark .g{color:var(--green)}
+  #tag{position:absolute;left:0;right:0;top:610px;text-align:center;font-family:"IBM Plex Mono",monospace;
+    font-size:20px;letter-spacing:.42em;text-transform:uppercase;color:var(--ink)}
+  #tagrule{position:absolute;left:50%;top:684px;height:2px;width:0;background:var(--butter);transform:translateX(-50%)}
+  #sub5{position:absolute;left:0;right:0;top:722px;text-align:center;font-family:"IBM Plex Mono",monospace;
+    font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="vig"></div>
+
+  <!-- ============ SCENE 1 ============ -->
+  <div id="s1" class="scene">
+    <div class="k" id="k1" style="left:96px;top:150px">01 — Inventaire</div>
+    <div id="word"></div>
+    <div id="s1rule"></div>
+    <div class="k" id="cap1">Gestion de stock &amp; de ventes</div>
+    <div id="swatch"></div>
+    <div id="s1side"></div>
+  </div>
+
+  <!-- ============ SCENE 2 ============ -->
+  <div id="s2" class="scene">
+    <div class="k" id="k2" style="left:96px;top:150px">02 — État du stock</div>
+    <div id="t2a" class="ttl"></div>
+    <div id="t2b" class="ttl"></div>
+    <div id="chips"></div>
+    <div id="tagrupt">Rupture</div>
+    <div id="s2line"></div>
+  </div>
+
+  <!-- ============ WIPE + SCENE 3 ============ -->
+  <div id="wipe"></div>
+
+  <div id="s3" class="scene">
+    <div class="k" id="k3" style="left:96px;top:150px;color:rgba(244,244,237,.5)">03 — Pilotage</div>
+    <div id="stat1">0</div>
+    <div id="stat1lab">Références actives</div>
+    <div id="stat2">0 €</div>
+    <div id="stat2lab">Valeur du stock</div>
+    <div id="s3meta">3 entrepôts · 12 points de vente</div>
+    <div id="tblhead">
+      <div style="width:190px">Réf.</div>
+      <div style="width:400px">Désignation</div>
+      <div style="width:170px">Emplacement</div>
+      <div style="width:260px">Niveau</div>
+      <div style="width:120px;text-align:right">Qté</div>
+      <div style="width:120px;text-align:right">État</div>
+    </div>
+    <div id="rows"></div>
+    <div class="hl" id="hl"></div>
+    <div id="s3note">Réapprovisionnement déclenché</div>
+  </div>
+
+  <!-- ============ SCENE 4 ============ -->
+  <div id="s4" class="scene">
+    <div class="k" id="k4" style="left:96px;top:150px">04 — Mouvements</div>
+    <h2 id="h4"><span id="h4a">Chaque</span> <span class="g" id="h4b">mouvement</span><br><span id="h4c">est compté.</span></h2>
+    <div class="k" id="h4cap" style="left:100px;top:470px">Entrées · Sorties · Transferts</div>
+    <svg id="flow" viewBox="0 0 1920 1080">
+      <path id="path" d="M 480 700 L 960 700 L 1440 700" fill="none" stroke="#c6c9b7" stroke-width="2.2"
+        stroke-dasharray="2 14" stroke-linecap="round"/>
+    </svg>
+    <div id="nodes"></div>
+    <div id="pills"></div>
+    <div id="stamp">Validé</div>
+  </div>
+
+  <!-- ============ SCENE 5 ============ -->
+  <div id="s5" class="scene">
+    <div id="lock">
+      <img id="mark" src="../public/brand/stockely-mark.png" alt="">
+      <div id="wordmark">Stock<span class="g">ely</span></div>
+    </div>
+    <div id="tagrule"></div>
+    <div id="tag">Le stock, sous contrôle.</div>
+    <div id="sub5">Gestion de stock &amp; de ventes — 2026</div>
+  </div>
+
+  <!-- ============ CHROME ============ -->
+  <div id="chrome">
+    <div class="tick tl"></div><div class="tick tr"></div>
+    <div class="tick bl"></div><div class="tick br"></div>
+    <div id="chr-brand">Stockely</div>
+    <div id="chr-scene">01 / 05</div>
+    <div id="chr-foot">Motion system · 1920×1080</div>
+    <div id="chr-fps">60 fps</div>
+  </div>
+  <div id="prog"></div>
+</div>
+
+<script src="scene.js"></script>
+</body>
+</html>

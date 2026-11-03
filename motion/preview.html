@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Stockely — Motion</title>
+<style>
+  :root{--paper:#f4f4ed;--ink:#171b16;--muted:#6c7267;--green:#2e7d5b;--line:#e5e5da;--butter:#e9d66b}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--paper);color:var(--ink);font-family:Manrope,system-ui,sans-serif;
+    display:flex;flex-direction:column;align-items:center;padding:48px 24px 80px;gap:24px}
+  header{width:min(1280px,100%);display:flex;justify-content:space-between;align-items:baseline;
+    font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  h1{font-size:30px;letter-spacing:-.03em;font-weight:800;width:min(1280px,100%)}
+  .row{width:min(1280px,100%);display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media (max-width:1000px){.row{grid-template-columns:1fr}}
+  figure{display:flex;flex-direction:column;gap:10px}
+  figcaption{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+  figcaption b{color:var(--ink);font-weight:500}
+  video{width:100%;border-radius:14px;background:#171b16;display:block;
+    box-shadow:0 2px 4px rgba(23,27,22,.05),0 30px 60px -40px rgba(23,27,22,.45)}
+  .meta{width:min(1280px,100%);display:flex;gap:36px;flex-wrap:wrap;font-family:"IBM Plex Mono",monospace;
+    font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+    border-top:1px solid var(--line);padding-top:20px}
+  .meta b{color:var(--ink);font-weight:500}
+</style>
+</head>
+<body>
+  <header><span>Stockely · motion</span><span>1920×1080 · 60 fps · 13,6 s</span></header>
+  <h1>Le stock, sous contrôle.</h1>
+  <div class="row">
+    <figure>
+      <figcaption><span>Voix <b>Denise</b></span><span>fr-FR · féminine</span></figcaption>
+      <video src="out/stockely-motion-vo.mp4" controls autoplay muted playsinline></video>
+    </figure>
+    <figure>
+      <figcaption><span>Voix <b>Henri</b></span><span>fr-FR · masculine</span></figcaption>
+      <video src="out/stockely-motion-vo-homme.mp4" controls muted playsinline></video>
+    </figure>
+  </div>
+  <div class="meta">
+    <span>Format <b>MP4 / H.264 + AAC</b></span>
+    <span>Durée <b>13,6 s</b></span>
+    <span>Cadence <b>60 i/s</b></span>
+    <span>Loudness <b>−15,5 LUFS</b></span>
+    <span>Son <b>voix + nappe</b></span>
+    <span>Version muette <b>stockely-motion.mp4</b></span>
+  </div>
+</body>
+</html>
