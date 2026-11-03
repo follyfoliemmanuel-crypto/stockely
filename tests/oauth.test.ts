@@ -5,6 +5,8 @@ import {
   codeChallenge,
   generateCodeVerifier,
   generateOAuthState,
+  resolveGoogleRedirectUri,
+  validateGoogleRedirectUri,
 } from "@/server/auth/oauth";
 
 describe("flux OAuth Google", () => {
@@ -49,5 +51,68 @@ describe("flux OAuth Google", () => {
     );
     expect(url.toString()).not.toContain("ne-doit-jamais-apparaitre");
     expect(url.toString()).not.toContain("client_secret");
+  });
+
+  describe("URI de redirection", () => {
+    const APP_URL = "https://stockely.vercel.app";
+
+    it("accepte une URI HTTPS correcte en production", () => {
+      expect(
+        validateGoogleRedirectUri(
+          "https://stockely.vercel.app/api/auth/google/callback",
+          "production",
+        ),
+      ).toBeNull();
+    });
+
+    it("refuse HTTP, un autre chemin et une URL invalide en production", () => {
+      expect(
+        validateGoogleRedirectUri(
+          "http://localhost:3000/api/auth/google/callback",
+          "production",
+        ),
+      ).toContain("HTTPS");
+      expect(
+        validateGoogleRedirectUri("https://stockely.vercel.app/autre", "production"),
+      ).toContain("/api/auth/google/callback");
+      expect(validateGoogleRedirectUri("pas-une-url", "production")).toContain(
+        "invalide",
+      );
+    });
+
+    it("ignore une ancienne valeur localhost et retombe sur APP_URL", () => {
+      expect(
+        resolveGoogleRedirectUri({
+          appUrl: APP_URL,
+          configured: "http://localhost:3000/api/auth/google/callback",
+          nodeEnv: "production",
+        }),
+      ).toBe(`${APP_URL}/api/auth/google/callback`);
+    });
+
+    it("utilise APP_URL quand aucune URI n'est configurée", () => {
+      expect(
+        resolveGoogleRedirectUri({ appUrl: `${APP_URL}/`, nodeEnv: "production" }),
+      ).toBe(`${APP_URL}/api/auth/google/callback`);
+    });
+
+    it("respecte une URI personnalisée valide", () => {
+      expect(
+        resolveGoogleRedirectUri({
+          appUrl: APP_URL,
+          configured: "https://app.example.com/api/auth/google/callback",
+          nodeEnv: "production",
+        }),
+      ).toBe("https://app.example.com/api/auth/google/callback");
+    });
+
+    it("renvoie null si même APP_URL n'est pas exploitable en production", () => {
+      expect(
+        resolveGoogleRedirectUri({
+          appUrl: "http://localhost:3000",
+          nodeEnv: "production",
+        }),
+      ).toBeNull();
+    });
   });
 });

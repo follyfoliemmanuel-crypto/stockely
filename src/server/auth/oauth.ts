@@ -19,35 +19,79 @@ export interface GoogleProfile {
   picture: string | null;
 }
 
-export function getGoogleConfig(): GoogleConfig | null {
-  const env = getEnv();
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return null;
-
-  const redirectUri =
-    env.GOOGLE_REDIRECT_URI ?? `${env.APP_URL}/api/auth/google/callback`;
-
-  // Une URI de redirection mal configurée pourrait envoyer le code OAuth
-  // vers un autre service. On n'accepte que le chemin de callback prévu,
-  // en HTTPS hors développement.
+/**
+ * Valide une URI de redirection Google.
+ * Renvoie la raison du refus, ou `null` si l'URI est acceptable.
+ */
+export function validateGoogleRedirectUri(
+  redirectUri: string,
+  nodeEnv: string,
+): string | null {
   let parsed: URL;
   try {
     parsed = new URL(redirectUri);
   } catch {
-    console.warn("[stockely] GOOGLE_REDIRECT_URI invalide : connexion Google désactivée");
-    return null;
+    return "URL invalide";
   }
 
+  // Une URI mal configurée pourrait envoyer le code OAuth vers un autre
+  // service : on n'accepte que le chemin de callback prévu.
   if (!parsed.pathname.endsWith("/api/auth/google/callback")) {
-    console.warn(
-      "[stockely] GOOGLE_REDIRECT_URI doit pointer vers /api/auth/google/callback",
-    );
-    return null;
+    return "le chemin doit être /api/auth/google/callback";
   }
 
-  if (env.NODE_ENV === "production" && parsed.protocol !== "https:") {
+  if (nodeEnv === "production" && parsed.protocol !== "https:") {
+    return "HTTPS requis en production";
+  }
+
+  return null;
+}
+
+/**
+ * Détermine l'URI de redirection réellement utilisée.
+ *
+ * `GOOGLE_REDIRECT_URI` peut conserver une ancienne valeur (par exemple
+ * `http://localhost:3000/...`) dans les variables de l'hébergeur. Une telle
+ * valeur est refusée, puis on retombe sur l'URL publique `APP_URL`, seule
+ * source vérifiée de l'application.
+ */
+export function resolveGoogleRedirectUri(input: {
+  appUrl: string;
+  configured?: string | null;
+  nodeEnv: string;
+}): string | null {
+  const appUrl = input.appUrl.replace(/\/+$/, "");
+  const fromAppUrl = `${appUrl}/api/auth/google/callback`;
+  const configured = input.configured?.trim() || null;
+
+  const candidates =
+    configured && configured !== fromAppUrl
+      ? [configured, fromAppUrl]
+      : [fromAppUrl];
+
+  for (const redirectUri of candidates) {
+    const problem = validateGoogleRedirectUri(redirectUri, input.nodeEnv);
+    if (!problem) return redirectUri;
     console.warn(
-      "[stockely] GOOGLE_REDIRECT_URI doit utiliser HTTPS en production",
+      `[stockely] GOOGLE_REDIRECT_URI ignorée (${problem}) : ${redirectUri}`,
     );
+  }
+
+  return null;
+}
+
+export function getGoogleConfig(): GoogleConfig | null {
+  const env = getEnv();
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return null;
+
+  const redirectUri = resolveGoogleRedirectUri({
+    appUrl: env.APP_URL,
+    configured: env.GOOGLE_REDIRECT_URI,
+    nodeEnv: env.NODE_ENV,
+  });
+
+  if (!redirectUri) {
+    console.warn("[stockely] connexion Google désactivée : URI de redirection invalide");
     return null;
   }
 
