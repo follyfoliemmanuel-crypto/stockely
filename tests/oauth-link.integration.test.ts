@@ -11,6 +11,7 @@ import {
   sessions,
   shops,
   users,
+  warehouses,
 } from "@/server/db/schema";
 import { loginWithGoogle } from "@/server/services/oauth";
 
@@ -99,5 +100,14 @@ describe.skipIf(!hasTestDatabase)("liaison Google d'un compte non vérifié", ()
       .where(eq(authIdentities.userId, user.id));
     expect(identities).toHaveLength(1);
     expect(identities[0]?.provider).toBe("google");
+
+    // Une boutique sans entrepôt rendait le tableau de bord inutilisable :
+    // la connexion doit désormais en créer un automatiquement.
+    const warehouseRows = await db
+      .select()
+      .from(warehouses)
+      .where(eq(warehouses.shopId, shop.id));
+    expect(warehouseRows).toHaveLength(1);
+    expect(warehouseRows[0]?.isDefault).toBe(true);
   });
 });

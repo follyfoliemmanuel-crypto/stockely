@@ -47,6 +47,51 @@ function isUniqueViolation(error: unknown): boolean {
   );
 }
 
+/**
+ * Garantit qu'une boutique possède au moins un entrepôt.
+ * Les comptes Google créés avant l'ajout de l'entrepôt par défaut sont ainsi
+ * réparés dès leur prochaine connexion, sans migration de données.
+ */
+export async function ensureDefaultWarehouse(
+  db: Database,
+  shopId: string,
+): Promise<void> {
+  const existing = await db
+    .select({ id: warehouses.id })
+    .from(warehouses)
+    .where(and(eq(warehouses.shopId, shopId), isNull(warehouses.archivedAt)))
+    .limit(1);
+
+  if (existing[0]) return;
+
+  // Tous les entrepôts sont archivés : on réactive le premier plutôt que
+  // d'insérer un code en conflit avec l'index unique (boutique, code).
+  const archived = await db
+    .select({ id: warehouses.id })
+    .from(warehouses)
+    .where(eq(warehouses.shopId, shopId))
+    .limit(1);
+
+  if (archived[0]) {
+    await db
+      .update(warehouses)
+      .set({ archivedAt: null, isActive: true, isDefault: true })
+      .where(eq(warehouses.id, archived[0].id));
+    return;
+  }
+
+  await db
+    .insert(warehouses)
+    .values({
+      shopId,
+      name: "Entrepôt principal",
+      code: "MAIN",
+      isDefault: true,
+      isActive: true,
+    })
+    .onConflictDoNothing();
+}
+
 export async function uniqueSlug(base: string): Promise<string> {
   const db = getDb();
   const root = slugify(base) || "boutique";
@@ -227,6 +272,9 @@ export async function loginUser(
       "Ce compte n'est rattaché à aucune boutique active.",
     );
   }
+
+  // Répare les boutiques créées sans entrepôt (anciens comptes Google).
+  await ensureDefaultWarehouse(db, first.shop.id);
 
   const session = await createSession({
     userId: user.id,

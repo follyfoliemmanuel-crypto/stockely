@@ -21,6 +21,7 @@ import type {
   WarehouseCreateInput,
   WarehouseUpdateInput,
 } from "@/server/validation/warehouses";
+import { ensureDefaultWarehouse } from "./auth";
 
 /** Cookie httpOnly contenant l'entrepôt de travail choisi. */
 export const WAREHOUSE_COOKIE = "stockely_warehouse";
@@ -125,7 +126,17 @@ export async function resolveWarehouse(
   context: Pick<AuthContext, "shop" | "membership" | "role">,
   requestedId?: string | null,
 ): Promise<Warehouse> {
-  const accessible = await listAccessibleWarehouses(context);
+  let accessible = await listAccessibleWarehouses(context);
+
+  // Répare à la volée une boutique sans entrepôt (anciens comptes Google) :
+  // le tableau de bord redevient utilisable sans attendre une reconnexion.
+  if (
+    accessible.length === 0 &&
+    (context.role === "owner" || context.role === "admin")
+  ) {
+    await ensureDefaultWarehouse(getDb(), context.shop.id);
+    accessible = await listAccessibleWarehouses(context);
+  }
 
   if (requestedId) {
     const requested = accessible.find((warehouse) => warehouse.id === requestedId);

@@ -4,6 +4,7 @@ import { and, eq, isNull } from "drizzle-orm";
 
 import { Logo } from "@/components/brand/logo";
 import { AiAssistant } from "@/components/app/ai-assistant";
+import { EmailVerificationBanner } from "@/components/app/email-verification-banner";
 import { LogoutButton } from "@/components/app/logout-button";
 import { MobileMenu } from "@/components/app/mobile-menu";
 import { NavLinks } from "@/components/app/nav-links";
@@ -16,6 +17,7 @@ import { getAuthContext } from "@/server/auth/context";
 import { getRequestWarehouseId } from "@/server/auth/warehouse";
 import { isAiConfigured } from "@/server/ai/client";
 import { getDb } from "@/server/db";
+import { isEmailConfigured } from "@/server/email";
 import { memberships, shops } from "@/server/db/schema";
 import { roleLabel, type Permission } from "@/server/permissions";
 import { listAccessibleWarehouses } from "@/server/services/warehouses";
@@ -171,6 +173,9 @@ export default async function AppLayout({
         </header>
 
         <main className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7 print:mx-0 print:max-w-none print:px-0 print:py-0">
+          {!context.user.emailVerifiedAt && isEmailConfigured() && (
+            <EmailVerificationBanner email={context.user.email} />
+          )}
           {children}
         </main>
       </div>

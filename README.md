@@ -388,11 +388,26 @@ Fonctionnement :
 
 - Un compte dont l'e-mail Google est **vérifié** est relié à l'identité Google.
 - Un nouvel utilisateur Google obtient une boutique dont il est propriétaire
-  (nommée « Boutique de … », renommable ensuite).
+  (nommée « Boutique de … », renommable ensuite), avec un entrepôt principal
+  par défaut. Les boutiques créées par d'anciens comptes Google sans entrepôt
+  sont réparées automatiquement à la connexion suivante.
 - Le flux utilise **PKCE S256**, un **state** à usage unique en cookie
   `HttpOnly` et ne fait jamais confiance à un e-mail non vérifié.
 - Sans identifiants configurés, `/api/auth/google/start` renvoie vers la
   connexion avec le message `google_not_configured`.
+
+## Vérification de l'adresse e-mail (Resend)
+
+À l'inscription par e-mail, un lien de confirmation est envoyé via Resend.
+Le compte reste utilisable immédiatement ; un bandeau dans l'application
+permet de renvoyer l'e-mail tant que l'adresse n'est pas confirmée.
+
+- Le jeton est signé (HMAC-SHA256 avec `APP_SECRET`), valable 24 heures.
+- Il transite dans le **fragment** d'URL (`/verify-email#token=…`), donc
+  jamais dans les journaux, proxys ou en-têtes `Referer`.
+- Le renvoi est limité à 3 e-mails par heure et par compte.
+- Sans `RESEND_API_KEY` ou `EMAIL_FROM`, aucun e-mail n'est simulé et le
+  renvoi répond `503 email_not_configured`.
 
 ## Réinitialisation du mot de passe (Resend)
 

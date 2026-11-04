@@ -12,13 +12,14 @@ import {
   shopSettings,
   shops,
   users,
+  warehouses,
   type MemberRole,
   type Shop,
   type User,
 } from "@/server/db/schema";
 import { ApiError } from "@/server/http";
 import type { GoogleProfile } from "@/server/auth/oauth";
-import { uniqueSlug } from "./auth";
+import { ensureDefaultWarehouse, uniqueSlug } from "./auth";
 
 export interface GoogleLoginResult {
   user: User;
@@ -60,6 +61,14 @@ async function createDefaultShop(
   });
   await tx.insert(shopSettings).values({ shopId: shop.id });
   await tx.insert(saleCounters).values({ shopId: shop.id });
+  // Sans entrepôt, le tableau de bord et les ventes sont inutilisables.
+  await tx.insert(warehouses).values({
+    shopId: shop.id,
+    name: "Entrepôt principal",
+    code: "MAIN",
+    isDefault: true,
+    isActive: true,
+  });
 
   return shop;
 }
@@ -214,6 +223,9 @@ export async function loginWithGoogle(
   if (!first) {
     throw new ApiError(403, "no_shop", "Aucune boutique active pour ce compte.");
   }
+
+  // Répare les boutiques Google créées avant l'ajout de l'entrepôt par défaut.
+  await ensureDefaultWarehouse(db, first.shop.id);
 
   const session = await createSession({
     userId: user.id,

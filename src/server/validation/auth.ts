@@ -44,6 +44,14 @@ export const forgotPasswordSchema = z.object({
   email,
 });
 
+export const verifyEmailSchema = z.object({
+  token: z
+    .string()
+    .min(20, "Jeton de vérification invalide.")
+    .max(1_024, "Jeton de vérification invalide.")
+    .regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/, "Jeton de vérification invalide."),
+});
+
 export const resetPasswordSchema = z.object({
   token: z
     .string()

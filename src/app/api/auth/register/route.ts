@@ -7,6 +7,7 @@ import {
   route,
 } from "@/server/http";
 import { registerUser } from "@/server/services/auth";
+import { sendVerificationEmail } from "@/server/services/email-verification";
 import { registerSchema } from "@/server/validation/auth";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,13 @@ export const POST = route(async (request: Request) => {
   });
 
   await setAuthCookies(result.session);
+
+  // L'inscription reste valide même si le fournisseur d'e-mail est indisponible.
+  try {
+    await sendVerificationEmail(result.user);
+  } catch {
+    console.error("[stockely] échec d'envoi de l'e-mail de vérification");
+  }
 
   return jsonOk(
     {
