@@ -20,12 +20,13 @@ let respond: Responder;
 const originalEnv = { ...process.env };
 
 beforeAll(async () => {
-  server = createServer((request, response) => {
-    let raw = "";
-    request.on("data", (chunk) => {
-      raw += String(chunk);
-    });
-    request.on("end", () => {
+  server = createServer(async (request, response) => {
+    try {
+      let raw = "";
+      for await (const chunk of request) {
+        raw += String(chunk);
+      }
+
       const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
       lastRequest = {
         authorization: headerValue(request.headers, "authorization"),
@@ -34,7 +35,10 @@ beforeAll(async () => {
       const result = respond(request.url ?? "", body);
       response.writeHead(result.status, { "Content-Type": "application/json" });
       response.end(JSON.stringify(result.body));
-    });
+    } catch {
+      response.writeHead(500, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ error: { message: "requete de test invalide" } }));
+    }
   });
 
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
