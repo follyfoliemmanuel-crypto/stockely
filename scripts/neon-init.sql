@@ -1,20 +1,3 @@
--- =====================================================================
--- Stockely - schema complet pour une base Neon vide
--- Genere a partir des migrations Drizzle 0000 a 0004.
---
--- A executer UNIQUEMENT sur une base vide (nouveau projet Neon).
--- Sur une base deja utilisee, utiliser plutot :
---   npm run db:migrate:prod -- --confirm=APPLY
--- avec BACKUP_REFERENCE renseigne.
---
--- Apres execution manuelle, la table de suivi Drizzle n'est pas remplie :
--- ne relancez pas db:migrate:prod sur cette base, ou considerez les
--- migrations comme deja appliquees.
--- =====================================================================
-
--- ---------------------------------------------------------------------
--- 0000_funny_morlun.sql
--- ---------------------------------------------------------------------
 CREATE TYPE "public"."member_role" AS ENUM('owner', 'admin', 'stock_manager', 'cashier', 'viewer');
 CREATE TYPE "public"."movement_type" AS ENUM('in', 'out', 'sale', 'customer_return', 'supplier_return', 'adjustment', 'reversal');
 CREATE TYPE "public"."notification_type" AS ENUM('low_stock', 'out_of_stock', 'sale', 'operation_failed', 'other');
@@ -361,13 +344,6 @@ CREATE INDEX "stock_movements_sale_idx" ON "stock_movements" USING btree ("sale_
 CREATE INDEX "suppliers_shop_idx" ON "suppliers" USING btree ("shop_id","name");
 CREATE UNIQUE INDEX "users_email_unique" ON "users" USING btree (lower("email"));
 
--- ---------------------------------------------------------------------
--- 0001_audit_guard.sql
--- ---------------------------------------------------------------------
--- Journal d'audit en ajout seul.
--- Même avec un accès applicatif compromis, une entrée déjà écrite ne peut
--- être ni modifiée, ni supprimée, ni effacée par TRUNCATE.
-
 CREATE OR REPLACE FUNCTION stockely_reject_audit_mutation()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -387,9 +363,6 @@ BEFORE TRUNCATE ON "audit_logs"
 FOR EACH STATEMENT
 EXECUTE FUNCTION stockely_reject_audit_mutation();
 
--- ---------------------------------------------------------------------
--- 0002_stale_raider.sql
--- ---------------------------------------------------------------------
 CREATE TABLE "auth_identities" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -407,9 +380,6 @@ CREATE UNIQUE INDEX "auth_identities_provider_account_unique" ON "auth_identitie
 CREATE INDEX "auth_identities_user_idx" ON "auth_identities" USING btree ("user_id");
 CREATE INDEX "password_reset_tokens_ip_idx" ON "password_reset_tokens" USING btree ("ip_hash","created_at" DESC NULLS LAST);
 
--- ---------------------------------------------------------------------
--- 0003_multi_warehouse.sql
--- ---------------------------------------------------------------------
 CREATE TABLE "warehouse_access" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
@@ -465,11 +435,6 @@ ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_warehouse_id_wareh
 CREATE INDEX "sales_shop_warehouse_idx" ON "sales" USING btree ("shop_id","warehouse_id","created_at" DESC NULLS LAST);
 CREATE INDEX "stock_movements_shop_warehouse_idx" ON "stock_movements" USING btree ("shop_id","warehouse_id","created_at" DESC NULLS LAST);
 CREATE UNIQUE INDEX "stock_movements_shop_idempotency_unique" ON "stock_movements" USING btree ("shop_id","idempotency_key") WHERE "stock_movements"."idempotency_key" is not null;
-/* -------------------------------------------------------------------------- */
-/* Reprise des données existantes : un entrepôt MAIN par entreprise.          */
-/* Aucune donnée n'est supprimée ; products.quantity devient un cache du      */
-/* total des entrepôts et l'invariant est vérifié avant validation.          */
-/* -------------------------------------------------------------------------- */
 INSERT INTO "warehouses" ("shop_id", "name", "code", "is_default", "is_active")
 SELECT "id", 'Entrepôt principal', 'MAIN', true, true FROM "shops";
 INSERT INTO "warehouse_stock" ("shop_id", "warehouse_id", "product_id", "quantity")
@@ -508,9 +473,6 @@ BEGIN
   END IF;
 END $$;
 
--- ---------------------------------------------------------------------
--- 0004_magical_sandman.sql
--- ---------------------------------------------------------------------
 CREATE TYPE "public"."transfer_status" AS ENUM('prepared', 'shipped', 'received', 'cancelled');
 ALTER TYPE "public"."member_role" ADD VALUE 'warehouse_keeper' BEFORE 'cashier';
 ALTER TYPE "public"."member_role" ADD VALUE 'accountant' BEFORE 'viewer';
