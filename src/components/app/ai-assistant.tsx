@@ -97,8 +97,6 @@ export function AiAssistant({
     }
   }
 
-  if (!enabled) return null;
-
   return (
     <div className="print:hidden">
       {open && (
@@ -151,8 +149,10 @@ export function AiAssistant({
             </div>
           </div>
 
-          <div
-            ref={listRef}
+          {enabled ? (
+            <>
+              <div
+                ref={listRef}
             aria-live="polite"
             className="flex-1 space-y-3 overflow-y-auto px-4 py-4 text-[0.8125rem] leading-6"
           >
@@ -243,6 +243,21 @@ export function AiAssistant({
               importants.
             </p>
           </form>
+            </>
+          ) : (
+            <div className="flex-1 px-4 py-5">
+              <div className="rounded-xl border border-line bg-surface px-3.5 py-3 text-[0.8125rem] leading-6 text-muted">
+                <p className="text-[0.8125rem] font-semibold text-ink">
+                  Bientôt disponible
+                </p>
+                <p className="mt-1">
+                  L&apos;assistant IA est en cours d&apos;activation sur cette
+                  installation. Il analysera votre stock, vos ventes et vos
+                  marges dès qu&apos;il sera ouvert.
+                </p>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
