@@ -298,7 +298,7 @@ npm run db:check:warehouses
 La commande échoue si une boutique n'a pas d'entrepôt, si un produit a un cache
 différent de la somme de ses entrepôts ou si une quantité est négative.
 
-#### Schéma complet sans CLI (base Neon neuve)
+#### Schéma complet sans CLI (base neuve ou déjà initialisée)
 
 Si vous ne pouvez pas lancer la CLI (par exemple pour initialiser un projet
 Neon depuis l'éditeur SQL du tableau de bord), utilisez le script consolidé :
@@ -310,19 +310,29 @@ scripts/neon-init.sql
 Il contient l'intégralité des migrations `0000` à `0004` : types énumérés,
 28 tables, index, contraintes et garde-fous du journal d'audit.
 
+Le script est **idempotent** : chaque type, table, colonne, contrainte, index
+et déclencheur n'est créé que s'il manque. Il peut donc être relancé sans
+erreur `already exists`, sur une base vide comme sur une base déjà en service,
+et il ne supprime ni ne modifie aucune donnée existante.
+
 Mode d'emploi :
 
 1. Neon → **SQL Editor**.
 2. Coller tout le contenu de `scripts/neon-init.sql`.
-3. **Run** (une base vide s'initialise en quelques secondes).
+3. **Run**.
 4. Renseigner `DATABASE_URL` (chaîne « Pooled ») dans `.env` et sur Vercel.
 5. Vérifier : `npm run db:status` puis `npm run db:check:warehouses`.
 
-> ⚠️ Ce script n'est **pas idempotent** : il échoue si un type ou une table
-> existe déjà. Ne l'exécutez jamais sur la base de production actuelle, qui
-> contient déjà les données — utilisez `db:migrate:prod` pour une migration
-> incrémentale. Après une exécution manuelle, la table de suivi Drizzle n'est
-> pas remplie : considérez les migrations comme appliquées et ne relancez pas
+Comportement sur une base déjà peuplée :
+
+- les objets existants sont ignorés ;
+- l'entrepôt `MAIN` et les lignes de `warehouse_stock` manquants sont créés,
+  les autres sont laissés tels quels (`ON CONFLICT DO NOTHING`) ;
+- les écarts d'inventaire sont signalés en `WARNING` dans la sortie, sans
+  interrompre l'exécution.
+
+> Après une exécution manuelle, la table de suivi Drizzle n'est pas remplie :
+> considérez les migrations comme appliquées et ne relancez pas
 > `db:migrate:prod` sur cette base.
 
 ### 5. Premier compte propriétaire

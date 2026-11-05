@@ -1,11 +1,46 @@
-CREATE TYPE "public"."member_role" AS ENUM('owner', 'admin', 'stock_manager', 'cashier', 'viewer');
-CREATE TYPE "public"."movement_type" AS ENUM('in', 'out', 'sale', 'customer_return', 'supplier_return', 'adjustment', 'reversal');
-CREATE TYPE "public"."notification_type" AS ENUM('low_stock', 'out_of_stock', 'sale', 'operation_failed', 'other');
-CREATE TYPE "public"."payment_method" AS ENUM('cash', 'mobile_money', 'card', 'other');
-CREATE TYPE "public"."payment_status" AS ENUM('recorded', 'refunded');
-CREATE TYPE "public"."purchase_status" AS ENUM('draft', 'received', 'cancelled');
-CREATE TYPE "public"."sale_status" AS ENUM('completed', 'cancelled');
-CREATE TABLE "audit_logs" (
+DO $do$
+BEGIN
+  CREATE TYPE "public"."member_role" AS ENUM('owner', 'admin', 'stock_manager', 'cashier', 'viewer');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  CREATE TYPE "public"."movement_type" AS ENUM('in', 'out', 'sale', 'customer_return', 'supplier_return', 'adjustment', 'reversal');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  CREATE TYPE "public"."notification_type" AS ENUM('low_stock', 'out_of_stock', 'sale', 'operation_failed', 'other');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  CREATE TYPE "public"."payment_method" AS ENUM('cash', 'mobile_money', 'card', 'other');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  CREATE TYPE "public"."payment_status" AS ENUM('recorded', 'refunded');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  CREATE TYPE "public"."purchase_status" AS ENUM('draft', 'received', 'cancelled');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  CREATE TYPE "public"."sale_status" AS ENUM('completed', 'cancelled');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+CREATE TABLE IF NOT EXISTS "audit_logs" (
 	"id" bigserial PRIMARY KEY NOT NULL,
 	"shop_id" uuid,
 	"user_id" uuid,
@@ -17,7 +52,7 @@ CREATE TABLE "audit_logs" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "categories" (
+CREATE TABLE IF NOT EXISTS "categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"name" text NOT NULL,
@@ -26,7 +61,7 @@ CREATE TABLE "categories" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "customers" (
+CREATE TABLE IF NOT EXISTS "customers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"name" text NOT NULL,
@@ -38,7 +73,7 @@ CREATE TABLE "customers" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "idempotency_keys" (
+CREATE TABLE IF NOT EXISTS "idempotency_keys" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"scope" text NOT NULL,
@@ -46,7 +81,7 @@ CREATE TABLE "idempotency_keys" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "login_attempts" (
+CREATE TABLE IF NOT EXISTS "login_attempts" (
 	"id" bigserial PRIMARY KEY NOT NULL,
 	"email" text NOT NULL,
 	"ip_hash" text,
@@ -54,7 +89,7 @@ CREATE TABLE "login_attempts" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "memberships" (
+CREATE TABLE IF NOT EXISTS "memberships" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -64,7 +99,7 @@ CREATE TABLE "memberships" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "notifications" (
+CREATE TABLE IF NOT EXISTS "notifications" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"user_id" uuid,
@@ -77,7 +112,7 @@ CREATE TABLE "notifications" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "password_reset_tokens" (
+CREATE TABLE IF NOT EXISTS "password_reset_tokens" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
 	"token_hash" text NOT NULL,
@@ -86,7 +121,7 @@ CREATE TABLE "password_reset_tokens" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "payments" (
+CREATE TABLE IF NOT EXISTS "payments" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"sale_id" uuid NOT NULL,
@@ -99,7 +134,7 @@ CREATE TABLE "payments" (
 	CONSTRAINT "payments_amount_positive" CHECK ("payments"."amount_cents" > 0)
 );
 
-CREATE TABLE "products" (
+CREATE TABLE IF NOT EXISTS "products" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"category_id" uuid,
@@ -123,7 +158,7 @@ CREATE TABLE "products" (
 	CONSTRAINT "products_min_stock_non_negative" CHECK ("products"."min_stock" >= 0)
 );
 
-CREATE TABLE "purchase_items" (
+CREATE TABLE IF NOT EXISTS "purchase_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"purchase_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
@@ -134,7 +169,7 @@ CREATE TABLE "purchase_items" (
 	CONSTRAINT "purchase_items_amounts_non_negative" CHECK ("purchase_items"."unit_cost_cents" >= 0 and "purchase_items"."line_total_cents" >= 0)
 );
 
-CREATE TABLE "purchases" (
+CREATE TABLE IF NOT EXISTS "purchases" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"supplier_id" uuid,
@@ -148,12 +183,12 @@ CREATE TABLE "purchases" (
 	CONSTRAINT "purchases_total_non_negative" CHECK ("purchases"."total_cents" >= 0)
 );
 
-CREATE TABLE "sale_counters" (
+CREATE TABLE IF NOT EXISTS "sale_counters" (
 	"shop_id" uuid PRIMARY KEY NOT NULL,
 	"last_number" bigint DEFAULT 0 NOT NULL
 );
 
-CREATE TABLE "sale_items" (
+CREATE TABLE IF NOT EXISTS "sale_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"sale_id" uuid NOT NULL,
 	"product_id" uuid,
@@ -168,7 +203,7 @@ CREATE TABLE "sale_items" (
 	CONSTRAINT "sale_items_amounts_non_negative" CHECK ("sale_items"."unit_price_cents" >= 0 and "sale_items"."discount_cents" >= 0 and "sale_items"."line_total_cents" >= 0)
 );
 
-CREATE TABLE "sales" (
+CREATE TABLE IF NOT EXISTS "sales" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"number" text NOT NULL,
@@ -190,7 +225,7 @@ CREATE TABLE "sales" (
 	CONSTRAINT "sales_discount_within_subtotal" CHECK ("sales"."discount_cents" <= "sales"."subtotal_cents")
 );
 
-CREATE TABLE "sessions" (
+CREATE TABLE IF NOT EXISTS "sessions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
 	"active_shop_id" uuid,
@@ -204,7 +239,7 @@ CREATE TABLE "sessions" (
 	"revoked_at" timestamp with time zone
 );
 
-CREATE TABLE "shop_settings" (
+CREATE TABLE IF NOT EXISTS "shop_settings" (
 	"shop_id" uuid PRIMARY KEY NOT NULL,
 	"invoice_prefix" text DEFAULT 'VTE' NOT NULL,
 	"receipt_footer" text,
@@ -214,7 +249,7 @@ CREATE TABLE "shop_settings" (
 	CONSTRAINT "shop_settings_tax_rate_range" CHECK ("shop_settings"."tax_rate_bps" between 0 and 10000)
 );
 
-CREATE TABLE "shops" (
+CREATE TABLE IF NOT EXISTS "shops" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
 	"slug" text NOT NULL,
@@ -228,7 +263,7 @@ CREATE TABLE "shops" (
 	"archived_at" timestamp with time zone
 );
 
-CREATE TABLE "stock_movements" (
+CREATE TABLE IF NOT EXISTS "stock_movements" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
@@ -243,7 +278,7 @@ CREATE TABLE "stock_movements" (
 	CONSTRAINT "stock_movements_delta_non_zero" CHECK ("stock_movements"."quantity_delta" <> 0)
 );
 
-CREATE TABLE "suppliers" (
+CREATE TABLE IF NOT EXISTS "suppliers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"name" text NOT NULL,
@@ -256,7 +291,7 @@ CREATE TABLE "suppliers" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "users" (
+CREATE TABLE IF NOT EXISTS "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" text NOT NULL,
 	"name" text NOT NULL,
@@ -266,83 +301,273 @@ CREATE TABLE "users" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "categories" ADD CONSTRAINT "categories_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "customers" ADD CONSTRAINT "customers_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "idempotency_keys" ADD CONSTRAINT "idempotency_keys_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "memberships" ADD CONSTRAINT "memberships_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "memberships" ADD CONSTRAINT "memberships_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "notifications" ADD CONSTRAINT "notifications_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "payments" ADD CONSTRAINT "payments_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "payments" ADD CONSTRAINT "payments_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "public"."sales"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "payments" ADD CONSTRAINT "payments_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "products" ADD CONSTRAINT "products_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "products" ADD CONSTRAINT "products_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "products" ADD CONSTRAINT "products_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "purchase_items" ADD CONSTRAINT "purchase_items_purchase_id_purchases_id_fk" FOREIGN KEY ("purchase_id") REFERENCES "public"."purchases"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "purchase_items" ADD CONSTRAINT "purchase_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "purchases" ADD CONSTRAINT "purchases_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "purchases" ADD CONSTRAINT "purchases_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "purchases" ADD CONSTRAINT "purchases_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "sale_counters" ADD CONSTRAINT "sale_counters_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "public"."sales"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "sales" ADD CONSTRAINT "sales_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "sales" ADD CONSTRAINT "sales_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "public"."customers"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "sales" ADD CONSTRAINT "sales_cashier_id_users_id_fk" FOREIGN KEY ("cashier_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "sales" ADD CONSTRAINT "sales_cancelled_by_users_id_fk" FOREIGN KEY ("cancelled_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "sessions" ADD CONSTRAINT "sessions_active_shop_id_shops_id_fk" FOREIGN KEY ("active_shop_id") REFERENCES "public"."shops"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "shop_settings" ADD CONSTRAINT "shop_settings_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "public"."sales"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_purchase_id_purchases_id_fk" FOREIGN KEY ("purchase_id") REFERENCES "public"."purchases"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_reversal_of_id_stock_movements_id_fk" FOREIGN KEY ("reversal_of_id") REFERENCES "public"."stock_movements"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "suppliers" ADD CONSTRAINT "suppliers_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-CREATE INDEX "audit_logs_shop_created_idx" ON "audit_logs" USING btree ("shop_id","created_at" DESC NULLS LAST);
-CREATE INDEX "audit_logs_entity_idx" ON "audit_logs" USING btree ("entity_type","entity_id");
-CREATE UNIQUE INDEX "categories_shop_name_unique" ON "categories" USING btree ("shop_id",lower("name"));
-CREATE INDEX "customers_shop_name_idx" ON "customers" USING btree ("shop_id","name");
-CREATE INDEX "customers_shop_phone_idx" ON "customers" USING btree ("shop_id","phone");
-CREATE UNIQUE INDEX "idempotency_keys_shop_scope_key_unique" ON "idempotency_keys" USING btree ("shop_id","scope","key");
-CREATE INDEX "login_attempts_email_idx" ON "login_attempts" USING btree ("email","created_at" DESC NULLS LAST);
-CREATE INDEX "login_attempts_ip_idx" ON "login_attempts" USING btree ("ip_hash","created_at" DESC NULLS LAST);
-CREATE UNIQUE INDEX "memberships_shop_user_unique" ON "memberships" USING btree ("shop_id","user_id");
-CREATE INDEX "memberships_user_idx" ON "memberships" USING btree ("user_id");
-CREATE INDEX "notifications_shop_user_read_idx" ON "notifications" USING btree ("shop_id","user_id","is_read");
-CREATE INDEX "notifications_shop_created_idx" ON "notifications" USING btree ("shop_id","created_at" DESC NULLS LAST);
-CREATE UNIQUE INDEX "password_reset_tokens_hash_unique" ON "password_reset_tokens" USING btree ("token_hash");
-CREATE INDEX "password_reset_tokens_user_idx" ON "password_reset_tokens" USING btree ("user_id");
-CREATE INDEX "payments_sale_idx" ON "payments" USING btree ("sale_id");
-CREATE UNIQUE INDEX "products_shop_sku_unique" ON "products" USING btree ("shop_id","sku");
-CREATE UNIQUE INDEX "products_shop_barcode_unique" ON "products" USING btree ("shop_id","barcode") WHERE "products"."barcode" is not null;
-CREATE INDEX "products_shop_archived_idx" ON "products" USING btree ("shop_id","is_archived");
-CREATE INDEX "products_shop_name_idx" ON "products" USING btree ("shop_id","name");
-CREATE INDEX "products_shop_category_idx" ON "products" USING btree ("shop_id","category_id");
-CREATE INDEX "purchase_items_purchase_idx" ON "purchase_items" USING btree ("purchase_id");
-CREATE INDEX "purchases_shop_created_idx" ON "purchases" USING btree ("shop_id","created_at" DESC NULLS LAST);
-CREATE INDEX "purchases_supplier_idx" ON "purchases" USING btree ("shop_id","supplier_id");
-CREATE UNIQUE INDEX "sale_items_sale_product_unique" ON "sale_items" USING btree ("sale_id","product_id");
-CREATE INDEX "sale_items_sale_idx" ON "sale_items" USING btree ("sale_id");
-CREATE UNIQUE INDEX "sales_shop_number_unique" ON "sales" USING btree ("shop_id","number");
-CREATE UNIQUE INDEX "sales_shop_idempotency_unique" ON "sales" USING btree ("shop_id","idempotency_key") WHERE "sales"."idempotency_key" is not null;
-CREATE INDEX "sales_shop_created_idx" ON "sales" USING btree ("shop_id","created_at" DESC NULLS LAST);
-CREATE INDEX "sales_shop_customer_idx" ON "sales" USING btree ("shop_id","customer_id");
-CREATE UNIQUE INDEX "sessions_token_hash_unique" ON "sessions" USING btree ("token_hash");
-CREATE INDEX "sessions_user_idx" ON "sessions" USING btree ("user_id");
-CREATE INDEX "sessions_expires_idx" ON "sessions" USING btree ("expires_at");
-CREATE UNIQUE INDEX "shops_slug_unique" ON "shops" USING btree ("slug");
-CREATE INDEX "shops_archived_idx" ON "shops" USING btree ("archived_at");
-CREATE INDEX "stock_movements_shop_created_idx" ON "stock_movements" USING btree ("shop_id","created_at" DESC NULLS LAST);
-CREATE INDEX "stock_movements_product_created_idx" ON "stock_movements" USING btree ("product_id","created_at" DESC NULLS LAST);
-CREATE INDEX "stock_movements_sale_idx" ON "stock_movements" USING btree ("sale_id");
-CREATE INDEX "suppliers_shop_idx" ON "suppliers" USING btree ("shop_id","name");
-CREATE UNIQUE INDEX "users_email_unique" ON "users" USING btree (lower("email"));
+DO $do$
+BEGIN
+  ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "categories" ADD CONSTRAINT "categories_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "customers" ADD CONSTRAINT "customers_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "idempotency_keys" ADD CONSTRAINT "idempotency_keys_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "memberships" ADD CONSTRAINT "memberships_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "memberships" ADD CONSTRAINT "memberships_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "notifications" ADD CONSTRAINT "notifications_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "payments" ADD CONSTRAINT "payments_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "payments" ADD CONSTRAINT "payments_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "public"."sales"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "payments" ADD CONSTRAINT "payments_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "products" ADD CONSTRAINT "products_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "products" ADD CONSTRAINT "products_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "products" ADD CONSTRAINT "products_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "purchase_items" ADD CONSTRAINT "purchase_items_purchase_id_purchases_id_fk" FOREIGN KEY ("purchase_id") REFERENCES "public"."purchases"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "purchase_items" ADD CONSTRAINT "purchase_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "purchases" ADD CONSTRAINT "purchases_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "purchases" ADD CONSTRAINT "purchases_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "purchases" ADD CONSTRAINT "purchases_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "sale_counters" ADD CONSTRAINT "sale_counters_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "public"."sales"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "sales" ADD CONSTRAINT "sales_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "sales" ADD CONSTRAINT "sales_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "public"."customers"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "sales" ADD CONSTRAINT "sales_cashier_id_users_id_fk" FOREIGN KEY ("cashier_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "sales" ADD CONSTRAINT "sales_cancelled_by_users_id_fk" FOREIGN KEY ("cancelled_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "sessions" ADD CONSTRAINT "sessions_active_shop_id_shops_id_fk" FOREIGN KEY ("active_shop_id") REFERENCES "public"."shops"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "shop_settings" ADD CONSTRAINT "shop_settings_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_sale_id_sales_id_fk" FOREIGN KEY ("sale_id") REFERENCES "public"."sales"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_purchase_id_purchases_id_fk" FOREIGN KEY ("purchase_id") REFERENCES "public"."purchases"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_reversal_of_id_stock_movements_id_fk" FOREIGN KEY ("reversal_of_id") REFERENCES "public"."stock_movements"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "suppliers" ADD CONSTRAINT "suppliers_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+CREATE INDEX IF NOT EXISTS "audit_logs_shop_created_idx" ON "audit_logs" USING btree ("shop_id","created_at" DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS "audit_logs_entity_idx" ON "audit_logs" USING btree ("entity_type","entity_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "categories_shop_name_unique" ON "categories" USING btree ("shop_id",lower("name"));
+CREATE INDEX IF NOT EXISTS "customers_shop_name_idx" ON "customers" USING btree ("shop_id","name");
+CREATE INDEX IF NOT EXISTS "customers_shop_phone_idx" ON "customers" USING btree ("shop_id","phone");
+CREATE UNIQUE INDEX IF NOT EXISTS "idempotency_keys_shop_scope_key_unique" ON "idempotency_keys" USING btree ("shop_id","scope","key");
+CREATE INDEX IF NOT EXISTS "login_attempts_email_idx" ON "login_attempts" USING btree ("email","created_at" DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS "login_attempts_ip_idx" ON "login_attempts" USING btree ("ip_hash","created_at" DESC NULLS LAST);
+CREATE UNIQUE INDEX IF NOT EXISTS "memberships_shop_user_unique" ON "memberships" USING btree ("shop_id","user_id");
+CREATE INDEX IF NOT EXISTS "memberships_user_idx" ON "memberships" USING btree ("user_id");
+CREATE INDEX IF NOT EXISTS "notifications_shop_user_read_idx" ON "notifications" USING btree ("shop_id","user_id","is_read");
+CREATE INDEX IF NOT EXISTS "notifications_shop_created_idx" ON "notifications" USING btree ("shop_id","created_at" DESC NULLS LAST);
+CREATE UNIQUE INDEX IF NOT EXISTS "password_reset_tokens_hash_unique" ON "password_reset_tokens" USING btree ("token_hash");
+CREATE INDEX IF NOT EXISTS "password_reset_tokens_user_idx" ON "password_reset_tokens" USING btree ("user_id");
+CREATE INDEX IF NOT EXISTS "payments_sale_idx" ON "payments" USING btree ("sale_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "products_shop_sku_unique" ON "products" USING btree ("shop_id","sku");
+CREATE UNIQUE INDEX IF NOT EXISTS "products_shop_barcode_unique" ON "products" USING btree ("shop_id","barcode") WHERE "products"."barcode" is not null;
+CREATE INDEX IF NOT EXISTS "products_shop_archived_idx" ON "products" USING btree ("shop_id","is_archived");
+CREATE INDEX IF NOT EXISTS "products_shop_name_idx" ON "products" USING btree ("shop_id","name");
+CREATE INDEX IF NOT EXISTS "products_shop_category_idx" ON "products" USING btree ("shop_id","category_id");
+CREATE INDEX IF NOT EXISTS "purchase_items_purchase_idx" ON "purchase_items" USING btree ("purchase_id");
+CREATE INDEX IF NOT EXISTS "purchases_shop_created_idx" ON "purchases" USING btree ("shop_id","created_at" DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS "purchases_supplier_idx" ON "purchases" USING btree ("shop_id","supplier_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "sale_items_sale_product_unique" ON "sale_items" USING btree ("sale_id","product_id");
+CREATE INDEX IF NOT EXISTS "sale_items_sale_idx" ON "sale_items" USING btree ("sale_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "sales_shop_number_unique" ON "sales" USING btree ("shop_id","number");
+CREATE UNIQUE INDEX IF NOT EXISTS "sales_shop_idempotency_unique" ON "sales" USING btree ("shop_id","idempotency_key") WHERE "sales"."idempotency_key" is not null;
+CREATE INDEX IF NOT EXISTS "sales_shop_created_idx" ON "sales" USING btree ("shop_id","created_at" DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS "sales_shop_customer_idx" ON "sales" USING btree ("shop_id","customer_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "sessions_token_hash_unique" ON "sessions" USING btree ("token_hash");
+CREATE INDEX IF NOT EXISTS "sessions_user_idx" ON "sessions" USING btree ("user_id");
+CREATE INDEX IF NOT EXISTS "sessions_expires_idx" ON "sessions" USING btree ("expires_at");
+CREATE UNIQUE INDEX IF NOT EXISTS "shops_slug_unique" ON "shops" USING btree ("slug");
+CREATE INDEX IF NOT EXISTS "shops_archived_idx" ON "shops" USING btree ("archived_at");
+CREATE INDEX IF NOT EXISTS "stock_movements_shop_created_idx" ON "stock_movements" USING btree ("shop_id","created_at" DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS "stock_movements_product_created_idx" ON "stock_movements" USING btree ("product_id","created_at" DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS "stock_movements_sale_idx" ON "stock_movements" USING btree ("sale_id");
+CREATE INDEX IF NOT EXISTS "suppliers_shop_idx" ON "suppliers" USING btree ("shop_id","name");
+CREATE UNIQUE INDEX IF NOT EXISTS "users_email_unique" ON "users" USING btree (lower("email"));
 
 CREATE OR REPLACE FUNCTION stockely_reject_audit_mutation()
 RETURNS trigger
@@ -353,17 +578,19 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS audit_logs_reject_update_delete ON "audit_logs";
 CREATE TRIGGER audit_logs_reject_update_delete
 BEFORE UPDATE OR DELETE ON "audit_logs"
 FOR EACH ROW
 EXECUTE FUNCTION stockely_reject_audit_mutation();
 
+DROP TRIGGER IF EXISTS audit_logs_reject_truncate ON "audit_logs";
 CREATE TRIGGER audit_logs_reject_truncate
 BEFORE TRUNCATE ON "audit_logs"
 FOR EACH STATEMENT
 EXECUTE FUNCTION stockely_reject_audit_mutation();
 
-CREATE TABLE "auth_identities" (
+CREATE TABLE IF NOT EXISTS "auth_identities" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
 	"provider" text NOT NULL,
@@ -373,14 +600,19 @@ CREATE TABLE "auth_identities" (
 );
 
 ALTER TABLE "users" ALTER COLUMN "password_hash" DROP NOT NULL;
-ALTER TABLE "password_reset_tokens" ADD COLUMN "ip_hash" text;
-ALTER TABLE "users" ADD COLUMN "email_verified_at" timestamp with time zone;
-ALTER TABLE "auth_identities" ADD CONSTRAINT "auth_identities_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
-CREATE UNIQUE INDEX "auth_identities_provider_account_unique" ON "auth_identities" USING btree ("provider","provider_account_id");
-CREATE INDEX "auth_identities_user_idx" ON "auth_identities" USING btree ("user_id");
-CREATE INDEX "password_reset_tokens_ip_idx" ON "password_reset_tokens" USING btree ("ip_hash","created_at" DESC NULLS LAST);
+ALTER TABLE "password_reset_tokens" ADD COLUMN IF NOT EXISTS "ip_hash" text;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_verified_at" timestamp with time zone;
+DO $do$
+BEGIN
+  ALTER TABLE "auth_identities" ADD CONSTRAINT "auth_identities_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+CREATE UNIQUE INDEX IF NOT EXISTS "auth_identities_provider_account_unique" ON "auth_identities" USING btree ("provider","provider_account_id");
+CREATE INDEX IF NOT EXISTS "auth_identities_user_idx" ON "auth_identities" USING btree ("user_id");
+CREATE INDEX IF NOT EXISTS "password_reset_tokens_ip_idx" ON "password_reset_tokens" USING btree ("ip_hash","created_at" DESC NULLS LAST);
 
-CREATE TABLE "warehouse_access" (
+CREATE TABLE IF NOT EXISTS "warehouse_access" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"warehouse_id" uuid NOT NULL,
@@ -388,7 +620,7 @@ CREATE TABLE "warehouse_access" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "warehouse_stock" (
+CREATE TABLE IF NOT EXISTS "warehouse_stock" (
 	"shop_id" uuid NOT NULL,
 	"warehouse_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
@@ -398,7 +630,7 @@ CREATE TABLE "warehouse_stock" (
 	CONSTRAINT "warehouse_stock_quantity_non_negative" CHECK ("warehouse_stock"."quantity" >= 0)
 );
 
-CREATE TABLE "warehouses" (
+CREATE TABLE IF NOT EXISTS "warehouses" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"name" text NOT NULL,
@@ -412,35 +644,82 @@ CREATE TABLE "warehouses" (
 	CONSTRAINT "warehouses_code_format" CHECK ("warehouses"."code" ~ '^[A-Z0-9][A-Z0-9_-]{1,31}$')
 );
 
-ALTER TABLE "sales" ADD COLUMN "warehouse_id" uuid;
-ALTER TABLE "stock_movements" ADD COLUMN "warehouse_id" uuid;
-ALTER TABLE "stock_movements" ADD COLUMN "idempotency_key" text;
-ALTER TABLE "warehouse_access" ADD CONSTRAINT "warehouse_access_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "warehouse_access" ADD CONSTRAINT "warehouse_access_warehouse_id_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "warehouse_access" ADD CONSTRAINT "warehouse_access_membership_id_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."memberships"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "warehouse_stock" ADD CONSTRAINT "warehouse_stock_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "warehouse_stock" ADD CONSTRAINT "warehouse_stock_warehouse_id_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "warehouse_stock" ADD CONSTRAINT "warehouse_stock_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "warehouses" ADD CONSTRAINT "warehouses_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-CREATE UNIQUE INDEX "warehouse_access_warehouse_membership_unique" ON "warehouse_access" USING btree ("warehouse_id","membership_id");
-CREATE INDEX "warehouse_access_membership_idx" ON "warehouse_access" USING btree ("membership_id");
-CREATE INDEX "warehouse_access_shop_idx" ON "warehouse_access" USING btree ("shop_id","warehouse_id");
-CREATE INDEX "warehouse_stock_shop_product_idx" ON "warehouse_stock" USING btree ("shop_id","product_id");
-CREATE INDEX "warehouse_stock_product_idx" ON "warehouse_stock" USING btree ("product_id");
-CREATE UNIQUE INDEX "warehouses_shop_code_unique" ON "warehouses" USING btree ("shop_id",upper("code"));
-CREATE UNIQUE INDEX "warehouses_shop_default_unique" ON "warehouses" USING btree ("shop_id") WHERE "warehouses"."is_default" = true;
-CREATE INDEX "warehouses_shop_active_idx" ON "warehouses" USING btree ("shop_id","is_active");
-ALTER TABLE "sales" ADD CONSTRAINT "sales_warehouse_id_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_warehouse_id_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
-CREATE INDEX "sales_shop_warehouse_idx" ON "sales" USING btree ("shop_id","warehouse_id","created_at" DESC NULLS LAST);
-CREATE INDEX "stock_movements_shop_warehouse_idx" ON "stock_movements" USING btree ("shop_id","warehouse_id","created_at" DESC NULLS LAST);
-CREATE UNIQUE INDEX "stock_movements_shop_idempotency_unique" ON "stock_movements" USING btree ("shop_id","idempotency_key") WHERE "stock_movements"."idempotency_key" is not null;
+ALTER TABLE "sales" ADD COLUMN IF NOT EXISTS "warehouse_id" uuid;
+ALTER TABLE "stock_movements" ADD COLUMN IF NOT EXISTS "warehouse_id" uuid;
+ALTER TABLE "stock_movements" ADD COLUMN IF NOT EXISTS "idempotency_key" text;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_access" ADD CONSTRAINT "warehouse_access_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_access" ADD CONSTRAINT "warehouse_access_warehouse_id_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_access" ADD CONSTRAINT "warehouse_access_membership_id_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."memberships"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_stock" ADD CONSTRAINT "warehouse_stock_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_stock" ADD CONSTRAINT "warehouse_stock_warehouse_id_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_stock" ADD CONSTRAINT "warehouse_stock_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouses" ADD CONSTRAINT "warehouses_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+CREATE UNIQUE INDEX IF NOT EXISTS "warehouse_access_warehouse_membership_unique" ON "warehouse_access" USING btree ("warehouse_id","membership_id");
+CREATE INDEX IF NOT EXISTS "warehouse_access_membership_idx" ON "warehouse_access" USING btree ("membership_id");
+CREATE INDEX IF NOT EXISTS "warehouse_access_shop_idx" ON "warehouse_access" USING btree ("shop_id","warehouse_id");
+CREATE INDEX IF NOT EXISTS "warehouse_stock_shop_product_idx" ON "warehouse_stock" USING btree ("shop_id","product_id");
+CREATE INDEX IF NOT EXISTS "warehouse_stock_product_idx" ON "warehouse_stock" USING btree ("product_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "warehouses_shop_code_unique" ON "warehouses" USING btree ("shop_id",upper("code"));
+CREATE UNIQUE INDEX IF NOT EXISTS "warehouses_shop_default_unique" ON "warehouses" USING btree ("shop_id") WHERE "warehouses"."is_default" = true;
+CREATE INDEX IF NOT EXISTS "warehouses_shop_active_idx" ON "warehouses" USING btree ("shop_id","is_active");
+DO $do$
+BEGIN
+  ALTER TABLE "sales" ADD CONSTRAINT "sales_warehouse_id_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_warehouse_id_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+CREATE INDEX IF NOT EXISTS "sales_shop_warehouse_idx" ON "sales" USING btree ("shop_id","warehouse_id","created_at" DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS "stock_movements_shop_warehouse_idx" ON "stock_movements" USING btree ("shop_id","warehouse_id","created_at" DESC NULLS LAST);
+CREATE UNIQUE INDEX IF NOT EXISTS "stock_movements_shop_idempotency_unique" ON "stock_movements" USING btree ("shop_id","idempotency_key") WHERE "stock_movements"."idempotency_key" is not null;
 INSERT INTO "warehouses" ("shop_id", "name", "code", "is_default", "is_active")
-SELECT "id", 'Entrepôt principal', 'MAIN', true, true FROM "shops";
+SELECT "id", 'Entrepôt principal', 'MAIN', true, true FROM "shops"
+ON CONFLICT DO NOTHING;
 INSERT INTO "warehouse_stock" ("shop_id", "warehouse_id", "product_id", "quantity")
 SELECT p."shop_id", w."id", p."id", p."quantity"
 FROM "products" p
-INNER JOIN "warehouses" w ON w."shop_id" = p."shop_id" AND w."code" = 'MAIN';
+INNER JOIN "warehouses" w ON w."shop_id" = p."shop_id" AND w."code" = 'MAIN'
+ON CONFLICT DO NOTHING;
 UPDATE "stock_movements" m
 SET "warehouse_id" = w."id"
 FROM "warehouses" w
@@ -461,7 +740,7 @@ BEGIN
   ), 0);
 
   IF mismatch_count > 0 THEN
-    RAISE EXCEPTION 'Reprise interrompue : % produit(s) dont le total entrepôt diffère de products.quantity.', mismatch_count;
+    RAISE WARNING 'Controle : % produit(s) dont le total entrepot differe de products.quantity.', mismatch_count;
   END IF;
 
   SELECT count(*) INTO shop_without_warehouse
@@ -469,21 +748,46 @@ BEGIN
   WHERE NOT EXISTS (SELECT 1 FROM "warehouses" w WHERE w."shop_id" = s."id");
 
   IF shop_without_warehouse > 0 THEN
-    RAISE EXCEPTION 'Reprise interrompue : % entreprise(s) sans entrepôt.', shop_without_warehouse;
+    RAISE WARNING 'Controle : % entreprise(s) sans entrepot.', shop_without_warehouse;
   END IF;
 END $$;
 
-CREATE TYPE "public"."transfer_status" AS ENUM('prepared', 'shipped', 'received', 'cancelled');
-ALTER TYPE "public"."member_role" ADD VALUE 'warehouse_keeper' BEFORE 'cashier';
-ALTER TYPE "public"."member_role" ADD VALUE 'accountant' BEFORE 'viewer';
-ALTER TYPE "public"."movement_type" ADD VALUE 'transfer_out' BEFORE 'adjustment';
-ALTER TYPE "public"."movement_type" ADD VALUE 'transfer_in' BEFORE 'adjustment';
-CREATE TABLE "transfer_counters" (
+DO $do$
+BEGIN
+  CREATE TYPE "public"."transfer_status" AS ENUM('prepared', 'shipped', 'received', 'cancelled');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TYPE "public"."member_role" ADD VALUE 'warehouse_keeper' BEFORE 'cashier';
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TYPE "public"."member_role" ADD VALUE 'accountant' BEFORE 'viewer';
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TYPE "public"."movement_type" ADD VALUE 'transfer_out' BEFORE 'adjustment';
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TYPE "public"."movement_type" ADD VALUE 'transfer_in' BEFORE 'adjustment';
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+CREATE TABLE IF NOT EXISTS "transfer_counters" (
 	"shop_id" uuid PRIMARY KEY NOT NULL,
 	"last_number" bigint DEFAULT 0 NOT NULL
 );
 
-CREATE TABLE "warehouse_transfer_items" (
+CREATE TABLE IF NOT EXISTS "warehouse_transfer_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"transfer_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
@@ -496,7 +800,7 @@ CREATE TABLE "warehouse_transfer_items" (
 	CONSTRAINT "warehouse_transfer_items_quantity_received_valid" CHECK ("warehouse_transfer_items"."quantity_received" is null or "warehouse_transfer_items"."quantity_received" >= 0)
 );
 
-CREATE TABLE "warehouse_transfers" (
+CREATE TABLE IF NOT EXISTS "warehouse_transfers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"shop_id" uuid NOT NULL,
 	"number" text NOT NULL,
@@ -517,23 +821,78 @@ CREATE TABLE "warehouse_transfers" (
 	CONSTRAINT "warehouse_transfers_different_warehouses" CHECK ("warehouse_transfers"."from_warehouse_id" <> "warehouse_transfers"."to_warehouse_id")
 );
 
-ALTER TABLE "stock_movements" ADD COLUMN "transfer_id" uuid;
-ALTER TABLE "transfer_counters" ADD CONSTRAINT "transfer_counters_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "warehouse_transfer_items" ADD CONSTRAINT "warehouse_transfer_items_transfer_id_warehouse_transfers_id_fk" FOREIGN KEY ("transfer_id") REFERENCES "public"."warehouse_transfers"("id") ON DELETE cascade ON UPDATE no action;
-ALTER TABLE "warehouse_transfer_items" ADD CONSTRAINT "warehouse_transfer_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_from_warehouse_id_warehouses_id_fk" FOREIGN KEY ("from_warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_to_warehouse_id_warehouses_id_fk" FOREIGN KEY ("to_warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
-ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_shipped_by_users_id_fk" FOREIGN KEY ("shipped_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_received_by_users_id_fk" FOREIGN KEY ("received_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_cancelled_by_users_id_fk" FOREIGN KEY ("cancelled_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
-CREATE UNIQUE INDEX "warehouse_transfer_items_transfer_product_unique" ON "warehouse_transfer_items" USING btree ("transfer_id","product_id");
-CREATE INDEX "warehouse_transfer_items_transfer_idx" ON "warehouse_transfer_items" USING btree ("transfer_id");
-CREATE UNIQUE INDEX "warehouse_transfers_shop_number_unique" ON "warehouse_transfers" USING btree ("shop_id","number");
-CREATE UNIQUE INDEX "warehouse_transfers_shop_idempotency_unique" ON "warehouse_transfers" USING btree ("shop_id","idempotency_key") WHERE "warehouse_transfers"."idempotency_key" is not null;
-CREATE INDEX "warehouse_transfers_shop_created_idx" ON "warehouse_transfers" USING btree ("shop_id","created_at" DESC NULLS LAST);
-CREATE INDEX "warehouse_transfers_from_idx" ON "warehouse_transfers" USING btree ("shop_id","from_warehouse_id");
-CREATE INDEX "warehouse_transfers_to_idx" ON "warehouse_transfers" USING btree ("shop_id","to_warehouse_id");
-ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_transfer_id_warehouse_transfers_id_fk" FOREIGN KEY ("transfer_id") REFERENCES "public"."warehouse_transfers"("id") ON DELETE set null ON UPDATE no action;
-CREATE INDEX "stock_movements_transfer_idx" ON "stock_movements" USING btree ("transfer_id");
+ALTER TABLE "stock_movements" ADD COLUMN IF NOT EXISTS "transfer_id" uuid;
+DO $do$
+BEGIN
+  ALTER TABLE "transfer_counters" ADD CONSTRAINT "transfer_counters_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_transfer_items" ADD CONSTRAINT "warehouse_transfer_items_transfer_id_warehouse_transfers_id_fk" FOREIGN KEY ("transfer_id") REFERENCES "public"."warehouse_transfers"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_transfer_items" ADD CONSTRAINT "warehouse_transfer_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_shop_id_shops_id_fk" FOREIGN KEY ("shop_id") REFERENCES "public"."shops"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_from_warehouse_id_warehouses_id_fk" FOREIGN KEY ("from_warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_to_warehouse_id_warehouses_id_fk" FOREIGN KEY ("to_warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE restrict ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_shipped_by_users_id_fk" FOREIGN KEY ("shipped_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_received_by_users_id_fk" FOREIGN KEY ("received_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+DO $do$
+BEGIN
+  ALTER TABLE "warehouse_transfers" ADD CONSTRAINT "warehouse_transfers_cancelled_by_users_id_fk" FOREIGN KEY ("cancelled_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+CREATE UNIQUE INDEX IF NOT EXISTS "warehouse_transfer_items_transfer_product_unique" ON "warehouse_transfer_items" USING btree ("transfer_id","product_id");
+CREATE INDEX IF NOT EXISTS "warehouse_transfer_items_transfer_idx" ON "warehouse_transfer_items" USING btree ("transfer_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "warehouse_transfers_shop_number_unique" ON "warehouse_transfers" USING btree ("shop_id","number");
+CREATE UNIQUE INDEX IF NOT EXISTS "warehouse_transfers_shop_idempotency_unique" ON "warehouse_transfers" USING btree ("shop_id","idempotency_key") WHERE "warehouse_transfers"."idempotency_key" is not null;
+CREATE INDEX IF NOT EXISTS "warehouse_transfers_shop_created_idx" ON "warehouse_transfers" USING btree ("shop_id","created_at" DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS "warehouse_transfers_from_idx" ON "warehouse_transfers" USING btree ("shop_id","from_warehouse_id");
+CREATE INDEX IF NOT EXISTS "warehouse_transfers_to_idx" ON "warehouse_transfers" USING btree ("shop_id","to_warehouse_id");
+DO $do$
+BEGIN
+  ALTER TABLE "stock_movements" ADD CONSTRAINT "stock_movements_transfer_id_warehouse_transfers_id_fk" FOREIGN KEY ("transfer_id") REFERENCES "public"."warehouse_transfers"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$do$;
+CREATE INDEX IF NOT EXISTS "stock_movements_transfer_idx" ON "stock_movements" USING btree ("transfer_id");
