@@ -26,3 +26,8 @@ blob-report/
 Thumbs.db
 .vercel
 *.tsbuildinfo
+
+# rendus video generes localement (non deployes)
+motion/film/
+motion/hype/
+
